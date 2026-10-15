@@ -219,7 +219,7 @@
   }
 
   function renderReader(url){
-    const page=savedPage(url);$('reader-source').href=url||data.source;
+    const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
     if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';
