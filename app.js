@@ -141,9 +141,26 @@
     $('reader-content').append(grid);return true;
   }
 
+  function renderCertificate(url){
+    if(url!=='https://nubip.edu.ua/zamovlennya-dovidok')return false;
+    $('title-page').textContent='Замовлення довідок';
+    const content=$('reader-content');
+    const intro=document.createElement('div');intro.className='certificate-intro';
+    const text=document.createElement('p');text.textContent='Замовте довідку про навчання в аспірантурі або про те, що ви є аспірантом зараз. Можна замовити кілька примірників.';
+    const timing=document.createElement('p');const label=document.createElement('strong');label.textContent='Підготовка - 1–5 робочих днів';timing.append(label,'. Про готовність повідомимо електронною поштою або телефоном.');
+    intro.append(text,timing);content.append(intro);
+    const help=document.createElement('p');help.className='certificate-help';help.textContent='Для заповнення потрібен інтернет. Якщо форма не відкривається або потрібен вхід у Google, скористайтеся кнопкою нижче.';content.append(help);
+    const fallback=document.createElement('a');fallback.className='secondary certificate-open';fallback.href='https://docs.google.com/forms/d/e/1FAIpQLSdwJh7jdtqm1ohdJ4GtGAUZNlssmWyHsRhAhadR7e-wdWoavQ/viewform';fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.textContent='Відкрити форму окремо ↗';content.append(fallback);
+    const frame=document.createElement('iframe');frame.className='certificate-frame';frame.title='Google Форма замовлення довідки';frame.src='https://docs.google.com/forms/d/e/1FAIpQLSdwJh7jdtqm1ohdJ4GtGAUZNlssmWyHsRhAhadR7e-wdWoavQ/viewform?embedded=true';frame.referrerPolicy='strict-origin-when-cross-origin';content.append(frame);
+    return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);$('reader-source').href=url||data.source;
+    // Snapshot refresh must not reset a form while a person is completing it.
+    if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-frame'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';
+    if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
       if(!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));

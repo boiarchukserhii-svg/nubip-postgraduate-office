@@ -15,3 +15,5 @@
 
 /* Keep both contact cards the same size, including stacked mobile layout. */
 #view-contacts .contact-grid{align-items:stretch;grid-auto-rows:1fr}#view-contacts .contact-card{height:100%;min-width:0}
+
+.certificate-intro{background:#eaf2ff;border:1px solid #d9e6f8;border-radius:16px;padding:18px 20px;margin-bottom:16px}.certificate-intro p:last-child{margin-bottom:0}.reader-content .certificate-help{font-size:13px;color:#60738b}.certificate-open{margin:0 0 18px}.certificate-frame{display:block;width:100%;height:80vh;min-height:560px;max-height:1000px;border:1px solid #dce6f3;border-radius:14px;background:#fff;margin-bottom:20px}@media(max-width:520px){.reader-panel:has(.certificate-frame){padding:16px}.certificate-intro{padding:16px}.certificate-frame{height:75vh;min-height:520px}}
