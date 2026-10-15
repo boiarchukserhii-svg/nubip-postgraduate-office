@@ -54,12 +54,65 @@
     for(const table of [...doc.body.querySelectorAll('table')]){const wrap=doc.createElement('div');wrap.className='reader-table-scroll';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Таблиця');table.before(wrap);wrap.append(table);}
     return [...doc.body.childNodes];
   }
+  // App-specific presentation; the synchronized source remains unchanged.
+  function renderCouncils(page){
+    if(new URL(page.url).pathname!=='/razovi-spetsializovani-vcheni-rady')return false;
+    const source=document.createElement('div');source.append(...readableFragment(page.html,page.url));
+    const links=[...source.querySelectorAll('a[href]')].map(a=>({name:a.textContent.replace(/\s+/g,' ').trim(),url:a.href}));
+    source.querySelectorAll('br').forEach(n=>n.replaceWith('\n'));
+    source.querySelectorAll('p,div,h2,h3,li').forEach(n=>n.append('\n'));
+    const text=source.textContent.replace(/\u00a0/g,' ');
+    const markers=[...text.matchAll(/(?:^|\n)\s*((?:20\d{2})\s*рік|РСВР\s*№?\s*\d+[^\S\n]*)/g)];
+    if(!markers.some(m=>m[1].startsWith('РСВР')))return false;
+    const groups=new Map();let year='Інші роки';
+    const clean=s=>s.replace(/\s+/g,' ').trim();
+    for(let i=0;i<markers.length;i++){
+      const marker=markers[i],label=clean(marker[1]);
+      if(!label.startsWith('РСВР')){year=label;if(!groups.has(year))groups.set(year,[]);continue;}
+      const raw=text.slice(marker.index+marker[0].length,markers[i+1]?.index??text.length).trim();
+      const full=clean(raw),match=full.match(/Захист дисертації\s+(.+?)(?=\s+на тему\s*:|$)/i);
+      const name=match?clean(match[1]):'';
+      const link=links.find(a=>a.name===name)||links.find(a=>name&&a.name&&name.startsWith(a.name));
+      const entry={label,raw,full,name,url:link?.url};
+      if(!groups.has(year))groups.set(year,[]);groups.get(year).push(entry);
+    }
+    const root=document.createElement('div');root.className='council-years';
+    const current=new Intl.DateTimeFormat('en',{year:'numeric',timeZone:'Europe/Kyiv'}).format(new Date());
+    function field(parent,label,value){if(!value)return;const p=document.createElement('p'),b=document.createElement('strong');b.textContent=label+': ';p.append(b,value);parent.append(p);}
+    for(const [label,entries] of groups){
+      if(!entries.length)continue;
+      const group=document.createElement('details');group.className='council-year';group.open=label.startsWith(current);
+      const summary=document.createElement('summary');summary.append(label);const count=document.createElement('span');count.className='council-count';count.textContent=String(entries.length);count.setAttribute('aria-label','Кількість рад: '+entries.length);summary.append(count);group.append(summary);
+      const list=document.createElement('div');list.className='council-list';group.append(list);
+      for(const entry of entries){
+        const card=document.createElement('details');card.className='council-card';const head=document.createElement('summary');
+        const badge=document.createElement('span');badge.className='council-badge';badge.textContent=entry.label;head.append(badge);
+        const candidate=document.createElement('span');candidate.className='council-candidate';candidate.append('Захист дисертації ');const strong=document.createElement('strong');strong.textContent=entry.name||'Інформація про здобувача';candidate.append(strong);head.append(candidate);card.append(head);
+        const body=document.createElement('div');body.className='council-body';
+        const topic=entry.full.match(/на тему\s*:\s*(.+?)(?=,?\s*поданої на здобуття|\s+зі спеціальності|$)/i);
+        const specialty=entry.full.match(/(?:зі\s+)?спеціальності\s+(.+?)(?=\s+галузі знань|\s*\(рішення|$)/i);
+        const area=entry.full.match(/галузі знань\s+(.+?)(?=\s*\(рішення|$)/i);
+        const basis=entry.full.match(/\(?рішення Вченої ради[\s\S]+$/i);
+        // Keep the source wording if its structure changes, rather than dropping information.
+        if(topic&&specialty&&area&&basis&&entry.name){
+          field(body,'Тема',topic[1].replace(/,\s*$/,''));field(body,'Спеціальність',specialty[1]);field(body,'Галузь знань',area[1]);
+          const legal=document.createElement('details');legal.className='council-basis';const title=document.createElement('summary');title.textContent='Підстава створення ради';legal.append(title);const p=document.createElement('p');p.textContent=basis[0];legal.append(p);body.append(legal);
+        }else{const p=document.createElement('p');p.className='council-original';p.textContent=entry.raw;body.append(p);}
+        if(entry.url){const a=document.createElement('a');a.className='text-link';a.href=entry.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Інформація про захист ↗';body.append(a);}
+        card.append(body);list.append(card);
+      }
+      root.append(group);
+    }
+    const intro=text.slice(0,markers[0].index).trim();if(intro){const p=document.createElement('p');p.textContent=intro;root.prepend(p);}
+    $('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);$('reader-source').href=url||data.source;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';
     if(page){
       $('title-page').textContent=page.title;
-      $('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed)$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';
       else if(page.checkedAt)$('reader-updated').textContent='Перевірено: '+formatSyncDate(page.checkedAt)+' (київський час)';
@@ -138,4 +191,3 @@
     window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
   }
 })();
-
