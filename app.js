@@ -141,24 +141,87 @@
     $('reader-content').append(grid);return true;
   }
 
+  const certificateEndpoint='https://script.google.com/macros/s/AKfycbxQm-d75PsUmd5cRjWkJYoC2rLPqEAP8NbicW7lNP4kUeU0kZDqbZJ-YDnfjvmhgXB7/exec';
+  function certificateStatus(requestId){
+    return new Promise((resolve,reject)=>{
+      const callback='officeAck_'+requestId,script=document.createElement('script');let timer;
+      const cleanup=()=>{clearTimeout(timer);script.remove();delete window[callback];};
+      window[callback]=result=>{cleanup();resolve(result);};
+      script.onerror=()=>{cleanup();reject(Error('status'));};
+      const url=new URL(certificateEndpoint);url.searchParams.set('requestId',requestId);url.searchParams.set('callback',callback);url.searchParams.set('_',Date.now());
+      script.src=url.href;script.referrerPolicy='no-referrer';timer=setTimeout(()=>{cleanup();reject(Error('timeout'));},10000);document.head.append(script);
+    });
+  }
   function renderCertificate(url){
     if(url!=='https://nubip.edu.ua/zamovlennya-dovidok')return false;
-    $('title-page').textContent='Замовлення довідок';
+    $('title-page').textContent='Замовлення довідки';
     const content=$('reader-content');
-    const intro=document.createElement('div');intro.className='certificate-intro';
-    const text=document.createElement('p');text.textContent='Замовте довідку про навчання в аспірантурі або про те, що ви є аспірантом зараз. Можна замовити кілька примірників.';
-    const timing=document.createElement('p');const label=document.createElement('strong');label.textContent='Підготовка - 1–5 робочих днів';timing.append(label,'. Про готовність повідомимо електронною поштою або телефоном.');
-    intro.append(text,timing);content.append(intro);
-    const help=document.createElement('p');help.className='certificate-help';help.textContent='Для заповнення потрібен інтернет. Якщо форма не відкривається або потрібен вхід у Google, скористайтеся кнопкою нижче.';content.append(help);
-    const fallback=document.createElement('a');fallback.className='secondary certificate-open';fallback.href='https://docs.google.com/forms/d/e/1FAIpQLSdwJh7jdtqm1ohdJ4GtGAUZNlssmWyHsRhAhadR7e-wdWoavQ/viewform';fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.textContent='Відкрити форму окремо ↗';content.append(fallback);
-    const frame=document.createElement('iframe');frame.className='certificate-frame';frame.title='Google Форма замовлення довідки';frame.src='https://docs.google.com/forms/d/e/1FAIpQLSdwJh7jdtqm1ohdJ4GtGAUZNlssmWyHsRhAhadR7e-wdWoavQ/viewform?embedded=true';frame.referrerPolicy='strict-origin-when-cross-origin';content.append(frame);
+    content.innerHTML=`<p class="certificate-timing">Підготовка - від 1 до 5 робочих днів</p>
+      <form class="certificate-native">
+        <div class="certificate-fields">
+          <label class="certificate-wide">Яка довідка потрібна?<select name="certificate" required><option value="current">Про те, що зараз навчаюся в аспірантурі</option><option value="past">Про навчання в аспірантурі в минулому</option></select></label>
+          <label class="certificate-wide">Прізвище, ім’я та по батькові<input name="person" autocomplete="name" minlength="3" maxlength="200" required placeholder="Вкажіть повне ім’я"></label>
+          <label>Електронна пошта<input name="email" type="email" autocomplete="email" maxlength="200" required placeholder="name@example.com"></label>
+          <label>Телефон<input name="phone" type="tel" autocomplete="tel" maxlength="40" required placeholder="+380"></label>
+          <label>Рік навчання<select name="year" required><option value="1">1 рік навчання</option><option value="2">2 рік навчання</option><option value="3">3 рік навчання</option><option value="4">4 рік навчання</option><option value="graduate">Випускник</option></select></label>
+          <label>Форма навчання<select name="mode" required><option value="day">Денна</option><option value="evening">Вечірня</option><option value="parttime">Заочна</option><option value="external">Здобувач поза аспірантурою</option></select></label>
+          <label class="certificate-wide certificate-years" hidden>Роки навчання<input name="years" maxlength="60" placeholder="Наприклад, 2021-2025" disabled></label>
+          <label class="certificate-wide">Спеціальність<select name="specialty" required><option value="">Виберіть спеціальність</option></select></label>
+          <label>Кількість примірників<input name="copies" type="number" min="1" max="100" step="1" value="1" required></label>
+          <label class="certificate-wide">Примітки <span class="certificate-optional">За потреби</span><textarea name="notes" maxlength="2000" rows="2" placeholder="Додаткові побажання до довідки"></textarea></label>
+        </div>
+        <label class="certificate-trap" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <p class="certificate-privacy">Заявка надійде до відділу аспірантури, докторантури та атестації наукових кадрів. Про готовність повідомимо електронною поштою або телефоном</p>
+        <button class="primary certificate-submit" type="submit">Надіслати заявку</button>
+        <p class="certificate-result" role="status" aria-live="polite"></p>
+        <button class="secondary certificate-recheck" type="button" hidden>Перевірити стан заявки</button>
+        <button class="secondary certificate-new" type="button" hidden>Нова заявка</button>
+      </form>`;
+    const specialties=[
+      '011/A1 Освітні, педагогічні науки/Освітні науки','015/А5 Професійна освіта','032/В9 Історія та археологія','033/В10 Філософія',
+      '051/С1 Економіка/Економіка та міжнародні економічні відносини (Економіка підприємств та галузей національного господарства)',
+      '051/С1 Економіка/Економіка та міжнародні економічні відносини (Економіка природокористування та охорони навколишнього середовища)',
+      '053/С4 Психологія','071/D1 Облік і оподаткування','072/D2 Фінанси, банківська справа, страхування та фондовий ринок','073/D3 Менеджмент','281/D4 Публічне управління та адміністрування','075/D5 Маркетинг','076/D7 Підприємництво та торгівля/Торгівля','081/D8 Право',
+      '091/E1 Біологія та біохімія (Біологія)','091/E1 Біологія та біохімія (Біотехнології біологічних систем)','101/E2 Екологія','102/E3 Хімія','122/F3 Комп’ютерні науки','141/G3 Електроенергетика, електротехніка та електромеханіка/Електрична інженерія','174/G7 Автоматизація, комп’ютерно-інтегровані технології та робототехніка','131/G9 Прикладна механіка','133/G11 Галузеве машинобудування/Машинобудування','181/G13 Харчові технології','187/G14 Деревообробні та меблеві технології','192/G19 Будівництво та цивільна інженерія','162/G21 Біотехнології та біоінженерія','201/H1 Агрономія','202 Захист і карантин рослин','203 Садівництво, плодоовочівництво та виноградарство','204/H2 Технології виробництва і переробки продукції тваринництва/Тваринництво','206/H3 Садово-паркове господарство','205/H4 Лісове господарство','207/H5 Водні біоресурси та аквакультура','211/H6 Ветеринарна медицина (Незаразна патологія тварин)','211/H6 Ветеринарна медицина (Заразна патологія тварин)','274/J8 Автомобільний транспорт'
+    ];
+    const form=content.querySelector('form'),fields=form.elements,status=form.querySelector('.certificate-result'),submit=form.querySelector('.certificate-submit'),recheck=form.querySelector('.certificate-recheck'),newButton=form.querySelector('.certificate-new');
+    for(const specialty of specialties){const option=document.createElement('option');option.value=specialty;option.textContent=specialty;fields.specialty.append(option);}
+    function yearsVisibility(){const graduate=fields.year.value==='graduate';form.querySelector('.certificate-years').hidden=!graduate;fields.years.disabled=!graduate;fields.years.required=graduate;}
+    fields.year.onchange=yearsVisibility;fields.certificate.onchange=()=>{if(fields.certificate.value==='past')fields.year.value='graduate';yearsVisibility();};
+    let activeId=null,transport=null,frame=null,finished=false,busy=false;
+    const setFieldsDisabled=disabled=>form.querySelectorAll('input,select,textarea').forEach(n=>n.disabled=disabled||n.name==='years'&&fields.year.value!=='graduate');
+    function cleanup(){transport?.remove();frame?.remove();transport=frame=null;}
+    function result(state){
+      if(state?.state==='saved'){finished=true;status.textContent='Заявку збережено. Дякуємо! Відділ повідомить про готовність довідки';status.dataset.state='success';submit.hidden=true;recheck.hidden=true;newButton.hidden=false;cleanup();return true;}
+      if(state?.state==='error'){status.textContent=state.message||'Не вдалося зберегти заявку. Перевірте поля або зверніться до відділу';status.dataset.state='error';activeId=null;setFieldsDisabled(false);yearsVisibility();submit.disabled=false;submit.textContent='Надіслати заявку';recheck.hidden=true;cleanup();return true;}
+      return false;
+    }
+    async function waitForResult(){
+      if(busy||!activeId||finished)return;busy=true;recheck.disabled=true;
+      const started=Date.now();
+      try{while(activeId&&!finished&&Date.now()-started<60000){if(!form.isConnected)return;try{if(result(await certificateStatus(activeId)))return;}catch{}await new Promise(resolve=>setTimeout(resolve,2500));}
+        if(!finished&&activeId){status.textContent='Підтвердження ще не отримано. Заявка могла зберегтися. Натисніть «Перевірити стан заявки», не надсилаючи її повторно';status.dataset.state='pending';recheck.hidden=false;}
+      }finally{busy=false;recheck.disabled=false;}
+    }
+    recheck.onclick=()=>{status.textContent='Перевіряємо стан заявки…';waitForResult();};
+    form.onsubmit=event=>{
+      event.preventDefault();if(activeId||finished||!form.reportValidity())return;
+      if(!navigator.onLine){status.textContent='Для надсилання потрібен інтернет. Заповнені поля залишаються на екрані';return;}
+      if(fields.phone.value.replace(/\D/g,'').length<9){fields.phone.setCustomValidity('Укажіть контактний номер телефону');fields.phone.reportValidity();return;}fields.phone.setCustomValidity('');
+      const values=Object.fromEntries(new FormData(form));activeId=[...crypto.getRandomValues(new Uint8Array(16))].map(n=>n.toString(16).padStart(2,'0')).join('');values.requestId=activeId;
+      frame=document.createElement('iframe');frame.name='officeSend_'+activeId;frame.hidden=true;frame.title='Надсилання заявки';document.body.append(frame);
+      transport=document.createElement('form');transport.hidden=true;transport.method='POST';transport.action=certificateEndpoint;transport.target=frame.name;const payload=document.createElement('input');payload.type='hidden';payload.name='payload';payload.value=JSON.stringify(values);transport.append(payload);document.body.append(transport);
+      setFieldsDisabled(true);submit.disabled=true;submit.textContent='Надсилаємо…';status.textContent='Очікуємо підтвердження збереження заявки…';status.dataset.state='pending';HTMLFormElement.prototype.submit.call(transport);waitForResult();
+    };
+    fields.phone.oninput=()=>fields.phone.setCustomValidity('');
+    newButton.onclick=()=>{form.reset();activeId=null;finished=false;status.textContent='';submit.hidden=false;submit.disabled=false;submit.textContent='Надіслати заявку';newButton.hidden=true;setFieldsDisabled(false);yearsVisibility();};
     return true;
   }
 
   function renderReader(url){
     const page=savedPage(url);$('reader-source').href=url||data.source;
     // Snapshot refresh must not reset a form while a person is completing it.
-    if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-frame'))return;
+    if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';
     if(renderCertificate(url))return;
     if(page){
