@@ -276,6 +276,27 @@
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastResumeCheck>300000){lastResumeCheck=Date.now();loadSnapshot();}});
   setInterval(()=>{if(!document.hidden)loadSnapshot();},900000);
 
+  let councilDialog=null,councilTrigger=null;
+  function closeCouncilDialog(){if(councilDialog?.open)councilDialog.close();}
+  function openCouncilDialog(summary){
+    if(!councilDialog){
+      councilDialog=document.createElement('dialog');councilDialog.className='council-dialog';councilDialog.setAttribute('aria-labelledby','council-dialog-title');
+      councilDialog.innerHTML='<header class="council-dialog-header"><h2 id="council-dialog-title"></h2><button class="secondary council-dialog-close" type="button" autofocus>Закрити ✕</button></header><div class="council-dialog-scroll"></div>';
+      document.body.append(councilDialog);
+      councilDialog.querySelector('.council-dialog-close').onclick=closeCouncilDialog;
+      councilDialog.addEventListener('close',()=>{document.body.classList.remove('council-dialog-open');councilTrigger?.focus({preventScroll:true});});
+      councilDialog.addEventListener('click',event=>{if(event.target===councilDialog)closeCouncilDialog();if(event.target.closest('a[href]'))closeCouncilDialog();});
+      window.addEventListener('hashchange',closeCouncilDialog);
+    }
+    councilTrigger=summary;
+    councilDialog.querySelector('h2').textContent=summary.querySelector('.council-badge').textContent;
+    const body=councilDialog.querySelector('.council-dialog-scroll');body.replaceChildren();
+    const candidate=document.createElement('p');candidate.className='council-dialog-candidate';candidate.append(...[...summary.querySelector('.council-candidate').childNodes].map(n=>n.cloneNode(true)));body.append(candidate);
+    const detail=summary.parentElement.querySelector('.council-body').cloneNode(true);body.append(detail);
+    document.body.classList.add('council-dialog-open');councilDialog.showModal();body.scrollTop=0;
+  }
+  document.addEventListener('click',event=>{const summary=event.target.closest('.council-card > summary');if(!summary)return;event.preventDefault();openCouncilDialog(summary);});
+
   const names=['home','study','documents','services','contacts','page','section'];
   function setView(name,moveFocus=true){
     if(name.startsWith('section/')){
