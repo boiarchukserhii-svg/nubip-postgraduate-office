@@ -103,7 +103,7 @@
         // Keep the source wording if its structure changes, rather than dropping information.
         if(topic&&specialty&&area&&basis&&entry.name){
           field(body,'Тема',topic[1].replace(/,\s*$/,''));field(body,'Спеціальність',specialty[1]);field(body,'Галузь знань',area[1]);
-          const legal=document.createElement('details');legal.className='council-basis';const title=document.createElement('summary');title.textContent='Підстава створення ради';legal.append(title);const p=document.createElement('p');p.textContent=basis[0];legal.append(p);body.append(legal);
+          const legal=document.createElement('details');legal.className='council-basis';const title=document.createElement('summary');title.textContent='Підстава створення ради';legal.append(title);const p=document.createElement('p');p.textContent=basis[0].trim().replace(/^\(([\s\S]*)\)$/,'$1').replace(/^рішення/,'Рішення');legal.append(p);body.append(legal);
         }else{const p=document.createElement('p');p.className='council-original';p.textContent=entry.raw;body.append(p);}
         if(entry.url){const a=document.createElement('a');a.className='text-link';a.href=entry.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Інформація про захист ↗';body.append(a);}
         card.append(body);list.append(card);
