@@ -1,0 +1,24 @@
+{
+  "department": "https://nubip.edu.ua/department/viddil-aspirantury-doktorantury-ta-atestatsiyi-naukovykh-kadriv",
+  "seeds": [
+    "https://nubip.edu.ua/department/viddil-aspirantury-doktorantury-ta-atestatsiyi-naukovykh-kadriv",
+    "https://nubip.edu.ua/vstup-do-aspirantury",
+    "https://nubip.edu.ua/spetsialnosti-osvitno-naukovi-prohramy",
+    "https://nubip.edu.ua/osvitniy-protses-4",
+    "https://nubip.edu.ua/akredytatsiya-osvitno-naukovykh-prohram",
+    "https://nubip.edu.ua/spetsialnosti-1",
+    "https://nubip.edu.ua/vstup-do-doktorantury",
+    "https://nubip.edu.ua/razovi-spetsializovani-vcheni-rady",
+    "https://nubip.edu.ua/doktorski-spetsializovani-vcheni-rady",
+    "https://nubip.edu.ua/shablony-dokumentiv-0",
+    "https://nubip.edu.ua/pamyatky",
+    "https://nubip.edu.ua/normatyvno-pravova-baza-2",
+    "https://nubip.edu.ua/akademichna-dobrochesnist-34",
+    "https://nubip.edu.ua/obhovorennya-2",
+    "https://nubip.edu.ua/anketuvannya-3",
+    "https://nubip.edu.ua/zamovlennya-dovidok",
+    "https://nubip.edu.ua/komanda-3"
+  ],
+  "maxPages": 80,
+  "maxDepth": 2
+}

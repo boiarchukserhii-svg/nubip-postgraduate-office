@@ -26,19 +26,105 @@
   $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="text-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   const quick=[data.services[0],data.documents[0].items[0],data.services[1]];
   $('quick-links').innerHTML=quick.map(([title,,url,key])=>`<a class="quick-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${icon(key)}<span>${esc(title)}</span>${icon('external')}</a>`).join('')+`<button type="button" class="quick-link quick-contact" data-view="contacts" style="border:0;background:transparent;width:100%;text-align:left;font:inherit">${icon('phone')}<span>Контакти відділу</span>${icon('arrow')}</button>`;
-  $('news-list').innerHTML=data.news.map(item=>`<a class="news-card" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"><div class="news-meta"><span>${esc(item.category)}</span><time datetime="${esc(item.date)}">${esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(item.date+'T12:00:00')))}</time></div><h3>${esc(item.title)}</h3><span class="text-link">Читати на сайті Університету ${icon('external')}</span></a>`).join('');
+  $('news-list').innerHTML=data.news.map(item=>`<a class="news-card" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"><div class="news-meta"><span>${esc(item.category)}</span><time datetime="${esc(item.date)}">${esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(item.date+'T12:00:00')))}</time></div><h3>${esc(item.title)}</h3><span class="text-link">Читати ${icon('external')}</span></a>`).join('');
   $('official-page').href=data.source;$('source-news').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
-  const names=['home','study','documents','services','contacts'];
+  // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
+  let snapshot=null,loadingSnapshot=false,readerOrigin='documents',restoreReaderScroll=null;
+  const readerTrail=[];
+  const sourceSeeds=new Set([...data.study.flatMap(g=>g.items.map(x=>x[2])),...data.documents.flatMap(g=>g.items.map(x=>x[2])),...data.services.map(x=>x[2])].filter(url=>url.startsWith('https://nubip.edu.ua/')).map(canonical));
+  function canonical(value){try{const u=new URL(value,location.href);if(!['nubip.edu.ua','www.nubip.edu.ua'].includes(u.hostname))return null;return 'https://nubip.edu.ua'+(u.pathname.replace(/\/$/,'')||'/')+u.search;}catch{return null;}}
+  function savedPage(url){return snapshot?.pages?.[url]||Object.values(snapshot?.pages||{}).find(p=>(p.aliases||[]).includes(url));}
+  function canRead(url){const key=canonical(url);return key&&(sourceSeeds.has(key)||savedPage(key)||/^\/(?:news\/|shablony-|pamyat|osvitn|spetsialnosti|vstup-do-|normatyvno-|akredyt|vidomosti-|rekomendatsiyi-|zamovlennya-|komanda|akademichna-|antykoruptsiyni-|obhovorennya|anketuvannya|doktorski-spetsializovani|razovi-spetsializovani|reytynhovi-spysky-)/.test(new URL(key).pathname))&&!/\.(?:pdf|docx?|xlsx?|zip|png|jpe?g|webp)$/i.test(new URL(key).pathname);}
+  function readableFragment(html,base){
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const allowed=new Set('p div section span h2 h3 h4 h5 h6 strong b em i u s br hr ul ol li blockquote pre code table thead tbody tfoot tr th td caption a img details summary figure figcaption dl dt dd sup sub'.split(' '));
+    for(const node of [...doc.body.querySelectorAll('*')]){
+      const tag=node.tagName.toLowerCase();
+      if(['script','style','iframe','object','embed','form','input','button','svg'].includes(tag)){node.remove();continue;}
+      if(!allowed.has(tag)){node.replaceWith(...node.childNodes);continue;}
+      for(const attr of [...node.attributes])if(!['href','src','alt','id','colspan','rowspan','loading'].includes(attr.name))node.removeAttribute(attr.name);
+      if(node.id)node.id='content-'+node.id;
+      for(const attr of ['href','src'])if(node.hasAttribute(attr)){
+        try{const url=new URL(node.getAttribute(attr),base);if(!['http:','https:','mailto:','tel:'].includes(url.protocol))node.removeAttribute(attr);else node.setAttribute(attr,url.href);}catch{node.removeAttribute(attr);}
+      }
+      if(tag==='a'){node.target='_blank';node.rel='noopener noreferrer';}
+      if(tag==='img')node.loading='lazy';
+    }
+    for(const table of [...doc.body.querySelectorAll('table')]){const wrap=doc.createElement('div');wrap.className='reader-table-scroll';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Таблиця');table.before(wrap);wrap.append(table);}
+    return [...doc.body.childNodes];
+  }
+  function renderReader(url){
+    const page=savedPage(url);$('reader-source').href=url||data.source;
+    $('reader-content').replaceChildren();$('reader-updated').textContent='';
+    if(page){
+      $('title-page').textContent=page.title;
+      $('reader-content').append(...readableFragment(page.html,page.url));
+      const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
+      if(failed)$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';
+      else if(page.checkedAt)$('reader-updated').textContent='Перевірено: '+formatSyncDate(page.checkedAt)+' (київський час)';
+    }else{
+      $('title-page').textContent='Завантаження інформації';
+      $('reader-content').textContent=loadingSnapshot?'Завантажую збережені дані…':'Цю сторінку ще не завантажено автоматично. Після першої успішної перевірки сайту вона з’явиться тут.';
+    }
+  }
+  const formatSyncDate=value=>{try{return new Intl.DateTimeFormat('uk-UA',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Kyiv'}).format(new Date(value));}catch{return '';}};
+  function updateNews(){
+    const news=snapshot?.news?.length?snapshot.news:data.news;
+    $('news-list').innerHTML=news.map(item=>`<a class="news-card" href="${esc(item.url)}"><div class="news-meta"><span>${esc(item.category||'Новини відділу')}</span>${item.date?`<time datetime="${esc(item.date)}">${esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(item.date+'T12:00:00')))}</time>`:''}</div><h3>${esc(item.title)}</h3><span class="text-link">Читати ${icon('arrow')}</span></a>`).join('');
+  }
+  function updateContacts(){
+    const contact=snapshot?.contact;if(!contact)return;
+    if(contact.address)$('contact-address').textContent=contact.address;
+    if(contact.phones?.length)$('contact-phones').innerHTML=contact.phones.map(p=>/^tel:\+?\d+$/.test(p.url)?`<a class="phone-link" href="${esc(p.url)}">${esc(p.label)}</a>`:'').join('');
+    $('contact-emails').innerHTML=(contact.emails||[]).map(p=>/^mailto:[\w.+-]+@[\w.-]+$/.test(p.url)?`<a class="text-link contact-email" href="${esc(p.url)}">${esc(p.label)}</a>`:'').join('');
+  }
+  async function loadSnapshot(){
+    if(loadingSnapshot)return;loadingSnapshot=true;$('refresh-data').disabled=true;
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const response=await fetch('./data.json?v=2',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('snapshot');const next=await response.json();
+      if(next.version!==1||!next.pages||typeof next.pages!=='object')throw Error('schema');snapshot=next;
+      const note=next.pending?'Готується перше автоматичне завантаження.':next.errors?.length?' Не всі сторінки вдалося оновити.':next.stats?.remaining?' Перевірка вкладених сторінок продовжиться під час наступного оновлення.':'';
+      $('sync-status').textContent=next.checkedAt?'Перевірено: '+formatSyncDate(next.checkedAt)+' (київський час).'+note:note;
+      updateNews();updateContacts();
+    }catch{$('sync-status').textContent=snapshot?'Не вдалося перевірити оновлення. Використовуємо збережені дані.':'Дані поки недоступні. Перевірте підключення або дочекайтеся першого автоматичного оновлення.';}
+    finally{clearTimeout(timeout);loadingSnapshot=false;$('refresh-data').disabled=false;if(location.hash.startsWith('#page/'))setView(location.hash.slice(1),false);}
+  }
+  function openReader(url){
+    const key=canonical(url);if(!key)return;
+    if(location.hash.startsWith('#page/')){
+      const current=decodeURIComponent(location.hash.slice(6));const anchor=new URL(url).hash.slice(1);
+      if(canonical(current)===key&&anchor){const target=$('reader-content').querySelector('[id="content-'+CSS.escape(decodeURIComponent(anchor))+'"]');if(target)target.scrollIntoView({block:'start'});return;}
+    }
+    const current=document.querySelector('.view:not([hidden])');if(current&&current.id!=='view-page'){readerOrigin=current.id.replace('view-','');readerTrail.length=0;}
+    readerTrail.push({hash:location.hash||'#home',scrollY:window.scrollY});
+    location.hash='page/'+encodeURIComponent(key);
+  }
+  document.addEventListener('click',event=>{
+    if(event.target.closest('button[data-view]')){readerTrail.length=0;return;}
+    const link=event.target.closest('a[href]');if(!link||link.id==='reader-source'||link.id==='official-page'||link.id==='source-news')return;
+    if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    if(canRead(link.href)){event.preventDefault();openReader(link.href);}
+  });
+  $('reader-back').onclick=()=>{const previous=readerTrail.pop();restoreReaderScroll=previous?.scrollY??0;location.hash=previous?.hash||'#'+readerOrigin;};
+  $('refresh-data').onclick=()=>loadSnapshot();
+  let lastResumeCheck=Date.now();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastResumeCheck>300000){lastResumeCheck=Date.now();loadSnapshot();}});
+  setInterval(()=>{if(!document.hidden)loadSnapshot();},900000);
+
+  const names=['home','study','documents','services','contacts','page'];
   function setView(name,moveFocus=true){
+    if(name.startsWith('page/')){let url;try{url=canonical(decodeURIComponent(name.slice(5)));}catch{}renderReader(url);name='page';}
     if(!names.includes(name))name='home';
     document.querySelectorAll('.view').forEach(node=>node.hidden=node.id!=='view-'+name);
-    document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===name;button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
-    if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});}
+    document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===(name==='page'?readerOrigin:name);button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
+    if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});if(restoreReaderScroll!==null){window.scrollTo({top:restoreReaderScroll,behavior:'instant'});restoreReaderScroll=null;}}
   }
   document.addEventListener('click',event=>{const button=event.target.closest('button[data-view]');if(!button)return;const name=button.dataset.view;if(location.hash==='#'+name)setView(name);else location.hash=name;});
   window.addEventListener('hashchange',()=>setView(location.hash.slice(1)));
   setView(location.hash.slice(1),false);
+  loadSnapshot();
   const updateOnline=()=>{$('offline-message').hidden=navigator.onLine;};
   window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();
   let installPrompt=null;
@@ -52,3 +138,4 @@
     window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
   }
 })();
+
