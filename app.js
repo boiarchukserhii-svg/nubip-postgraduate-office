@@ -51,6 +51,16 @@
       if(tag==='a'){node.target='_blank';node.rel='noopener noreferrer';}
       if(tag==='img')node.loading='lazy';
     }
+    // Keep image-only information sheets; remove illustrations from text articles.
+    if(doc.body.textContent.replace(/\s+/g,' ').trim().length>=25){
+      for(const img of [...doc.body.querySelectorAll('img')]){
+        const link=img.closest('a');img.remove();
+        if(link&&!link.textContent.trim()&&!link.querySelector('img'))link.remove();
+      }
+      for(const node of [...doc.body.querySelectorAll('p,figure,div')].reverse()){
+        if(!node.textContent.trim()&&!node.querySelector('img,table,hr'))node.remove();
+      }
+    }
     for(const table of [...doc.body.querySelectorAll('table')]){const wrap=doc.createElement('div');wrap.className='reader-table-scroll';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Таблиця');table.before(wrap);wrap.append(table);}
     return [...doc.body.childNodes];
   }
