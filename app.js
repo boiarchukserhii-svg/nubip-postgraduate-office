@@ -116,12 +116,39 @@
     $('reader-content').append(root);return true;
   }
 
+  function renderTeam(page){
+    if(new URL(page.url).pathname!=='/komanda-3')return false;
+    const source=document.createElement('div');source.append(...readableFragment(page.html,page.url));
+    const members=[];
+    for(const row of source.querySelectorAll('tr')){
+      const paragraphs=[...row.querySelectorAll('p')];
+      const nameIndex=paragraphs.findIndex(p=>p.querySelector('strong,b')&&p.textContent.trim());
+      if(nameIndex<0)continue;
+      const name=paragraphs[nameIndex].textContent.replace(/\s+/g,' ').trim();
+      const roleParagraph=paragraphs.slice(nameIndex+1).find(p=>p.textContent.trim());
+      if(!roleParagraph)continue;
+      let role=roleParagraph.textContent.replace(/\s+/g,' ').trim()
+        .replace(/\s+аспірантури,\s*докторантури[\s\S]*$/i,'').replace(/[,;.]\s*$/,'');
+      role=role.charAt(0).toLocaleLowerCase('uk-UA')+role.slice(1);
+      members.push({name,role});
+    }
+    if(!members.length)return false;
+    const grid=document.createElement('div');grid.className='team-grid';
+    for(const member of members){
+      const card=document.createElement('section');card.className='team-card';
+      const name=document.createElement('h3');name.textContent=member.name;
+      const role=document.createElement('p');role.textContent=member.role;
+      card.append(name,role);grid.append(card);
+    }
+    $('reader-content').append(grid);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);$('reader-source').href=url||data.source;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed)$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';
       else if(page.checkedAt)$('reader-updated').textContent='Перевірено: '+formatSyncDate(page.checkedAt)+' (київський час)';
