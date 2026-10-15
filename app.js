@@ -62,13 +62,13 @@
     source.querySelectorAll('br').forEach(n=>n.replaceWith('\n'));
     source.querySelectorAll('p,div,h2,h3,li').forEach(n=>n.append('\n'));
     const text=source.textContent.replace(/\u00a0/g,' ');
-    const markers=[...text.matchAll(/(?:^|\n)\s*((?:20\d{2})\s*рік|РСВР\s*№?\s*\d+[^\S\n]*)/g)];
+    const markers=[...text.matchAll(/(?:^|\n)\s*((?:20\d{2})\s*рік|(?:РСВР\s*№?\s*\d+|ДФ\s*\d+\.\d+\.\d+)[^\S\n]*)/g)];
     if(!markers.some(m=>m[1].startsWith('РСВР')))return false;
     const groups=new Map();let year='Інші роки';
     const clean=s=>s.replace(/\s+/g,' ').trim();
     for(let i=0;i<markers.length;i++){
       const marker=markers[i],label=clean(marker[1]);
-      if(!label.startsWith('РСВР')){year=label;if(!groups.has(year))groups.set(year,[]);continue;}
+      if(/^20\d{2}/.test(label)){year=label;if(!groups.has(year))groups.set(year,[]);continue;}
       const raw=text.slice(marker.index+marker[0].length,markers[i+1]?.index??text.length).trim();
       const full=clean(raw),match=full.match(/Захист дисертації\s+(.+?)(?=\s+на тему\s*:|$)/i);
       const name=match?clean(match[1]):'';
@@ -90,9 +90,9 @@
         const candidate=document.createElement('span');candidate.className='council-candidate';candidate.append('Захист дисертації ');const strong=document.createElement('strong');strong.textContent=entry.name||'Інформація про здобувача';candidate.append(strong);head.append(candidate);card.append(head);
         const body=document.createElement('div');body.className='council-body';
         const topic=entry.full.match(/на тему\s*:\s*(.+?)(?=,?\s*поданої на здобуття|\s+зі спеціальності|$)/i);
-        const specialty=entry.full.match(/(?:зі\s+)?спеціальності\s+(.+?)(?=\s+галузі знань|\s*\(рішення|$)/i);
-        const area=entry.full.match(/галузі знань\s+(.+?)(?=\s*\(рішення|$)/i);
-        const basis=entry.full.match(/\(?рішення Вченої ради[\s\S]+$/i);
+        const specialty=entry.full.match(/(?:зі\s+)?спеціальності\s+(.+?)(?=\s+(?:з\s+)?галузі знань|\s*\((?:рішення|Наказ)|$)/i);
+        const area=entry.full.match(/галузі знань\s+(.+?)(?=\s+та спеціальності|\s*\((?:рішення|Наказ)|$)/i);
+        const basis=entry.full.match(/\(?(?:рішення Вченої ради|Наказ МОН України)[\s\S]+$/i);
         // Keep the source wording if its structure changes, rather than dropping information.
         if(topic&&specialty&&area&&basis&&entry.name){
           field(body,'Тема',topic[1].replace(/,\s*$/,''));field(body,'Спеціальність',specialty[1]);field(body,'Галузь знань',area[1]);
