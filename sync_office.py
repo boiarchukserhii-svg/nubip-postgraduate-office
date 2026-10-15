@@ -182,7 +182,7 @@ def download(url):
         if attempt<2: time.sleep(2**(attempt+1))
     raise RuntimeError(str(last))
 
-def sync(base=ROOT):
+def sync(base=ROOT, allow_stale=False):
     config=json.loads((base/'source-pages.json').read_text(encoding='utf-8-sig'))
     path=base/'data.json'
     old=json.loads(path.read_text(encoding='utf-8-sig')) if path.exists() else {}
@@ -220,6 +220,9 @@ def sync(base=ROOT):
         except Exception as exc:
             errors.append({'url':requested,'message':str(exc)[:300]});print('WARNING',requested,str(exc)[:300])
         time.sleep(.3)
+    if fetched==0 and allow_stale and old.get('version')==1 and not old.get('pending') and old.get('pages') and all(isinstance(p,dict) and p.get('title') and p.get('html') and p.get('url') for p in old['pages'].values()):
+        print('::warning::Сайт НУБіП недоступний для автоматичного читання. Публікуємо зміни застосунку з попередніми даними; дата їх перевірки залишається без змін.')
+        return old
     if not pages or fetched==0:raise RuntimeError('Не отримано жодної придатної сторінки. Попередній файл даних залишено без змін.')
     result={'version':1,'checkedAt':now,'updatedAt':now,'pages':pages,'news':news,'contact':contact,'errors':errors,'pending':False,'stats':{'checked':len(seen),'received':fetched,'saved':len(pages),'remaining':len(queue)}}
     payload=json.dumps(result,ensure_ascii=False,indent=2)+'\n'
@@ -228,5 +231,14 @@ def sync(base=ROOT):
     print(json.dumps(result['stats'],ensure_ascii=False));return result
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--directory',type=Path,default=ROOT);args=parser.parse_args();sync(args.directory)
-
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--directory',type=Path,default=ROOT)
+    parser.add_argument('--refresh-source',action='store_true',help='Explicitly refresh content from the NUBiP website')
+    args=parser.parse_args()
+    if args.refresh_source:
+        sync(args.directory,allow_stale=True)
+    else:
+        saved=json.loads((args.directory/'data.json').read_text(encoding='utf-8-sig'))
+        if saved.get('version')!=1 or saved.get('pending') or not isinstance(saved.get('pages'),dict) or not saved['pages'] or not all(isinstance(p,dict) and p.get('title') and p.get('html') and p.get('url') for p in saved['pages'].values()):
+            raise RuntimeError('Немає придатного збереженого наповнення для публікації.')
+        print('Автоматичне читання сайту НУБіП призупинено. Публікуємо застосунок зі збереженим наповненням. Файл даних і дата перевірки не змінюються.')
