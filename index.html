@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
 </head>
 <body>
   <a class="skip" href="#content">Перейти до змісту</a>
@@ -24,19 +24,16 @@
     <main id="content">
       <p id="offline-message" class="offline-message" role="status" hidden>Відкрита збережена версія. Для переходу на сайт Університету потрібен інтернет.</p>
       <section id="view-home" class="view" aria-labelledby="title-home">
-        <div class="home-layout">
-          <div>
-            <section class="hero panel">
-              <span class="eyebrow">АСПІРАНТАМ І ДОКТОРАНТАМ</span>
-              <h2 id="title-home" tabindex="-1">Від вступу до захисту</h2>
-              <p>Освітні програми, документи та сервіси відділу в одному місці.</p>
-              <div class="actions"><button type="button" class="primary" data-view="study">Аспірантура та докторантура <span data-icon="arrow"></span></button><button type="button" class="secondary" data-view="documents">Знайти документ</button></div>
-            </section>
-            <a class="feature panel" href="https://nubip.edu.ua/spetsialnosti-osvitno-naukovi-prohramy" target="_blank" rel="noopener noreferrer"><span class="feature-icon" data-icon="book"></span><div><span class="eyebrow">ОСВІТНІЙ ПРОЦЕС</span><h3>Спеціальності та ОНП</h3><p>Програми підготовки аспірантів Університету.</p></div><span data-icon="external"></span></a>
-          </div>
-          <aside><section class="panel quick-panel"><h2>Швидкий доступ</h2><div id="quick-links" class="quick-links"></div></section><section class="help panel"><span class="feature-icon" data-icon="phone"></span><h2>Потрібна допомога?</h2><p>Зв’яжіться з відділом або завітайте на консультацію.</p><button class="secondary" type="button" data-view="contacts">Контакти відділу <span data-icon="arrow"></span></button></section></aside>
+        <section class="home-intro"><h2 id="title-home" tabindex="-1">Від вступу до захисту</h2><p>Навчання, документи та підтримка на кожному етапі</p></section>
+        <div class="home-directions">
+          <button class="home-direction" type="button" data-view="section/aspirantura"><span class="feature-icon" data-icon="graduation"></span><h3>Аспірантура</h3><p>Вступ, освітні програми та навчання</p><span class="text-link">Переглянути <span data-icon="arrow"></span></span></button>
+          <button class="home-direction" type="button" data-view="section/doctorantura"><span class="feature-icon" data-icon="book"></span><h3>Докторантура</h3><p>Вступ і підготовка докторів наук</p><span class="text-link">Переглянути <span data-icon="arrow"></span></span></button>
+          <button class="home-direction" type="button" data-view="section/defense"><span class="feature-icon" data-icon="users"></span><h3>Захист дисертації</h3><p>Спеціалізовані ради та календар захистів</p><span class="text-link">Переглянути <span data-icon="arrow"></span></span></button>
+          <button class="home-direction" type="button" data-view="documents"><span class="feature-icon" data-icon="files"></span><h3>Документи</h3><p>Шаблони, пам’ятки та нормативна база</p><span class="text-link">Переглянути <span data-icon="arrow"></span></span></button>
         </div>
+        <section class="home-contact panel"><div><h3>Зв’язатися з відділом</h3><p>Допоможемо з вашими питаннями</p></div><div class="home-contact-actions"><button class="secondary" type="button" data-view="contacts">Контакти</button><a class="secondary" href="https://nubip.edu.ua/komanda-3">Команда</a></div></section>
       </section>
+      <section id="view-section" class="view" hidden aria-labelledby="title-section"><button class="secondary" type="button" data-view="home">← На головну</button><h2 id="title-section" class="page-title" tabindex="-1"></h2><div id="section-links" class="link-grid"></div></section>
       <section id="view-study" class="view" hidden aria-labelledby="title-study"><h2 id="title-study" class="page-title" tabindex="-1">Аспірантура та докторантура</h2><div id="study-list" class="section-groups"></div></section>
       <section id="view-documents" class="view" hidden aria-labelledby="title-documents"><h2 id="title-documents" class="page-title" tabindex="-1">Документи</h2><div id="document-list" class="section-groups"></div></section>
       <section id="view-services" class="view" hidden aria-labelledby="title-services"><h2 id="title-services" class="page-title" tabindex="-1">Сервіси відділу</h2><div id="service-list" class="service-grid"></div></section>
@@ -53,6 +50,6 @@
     </nav>
   </div>
   <dialog id="install-help" aria-labelledby="install-title"><h2 id="install-title">Встановлення застосунку</h2><p><strong>Android:</strong> у Chrome відкрийте меню ⋮ та виберіть «Встановити застосунок» або «Додати на головний екран».</p><p><strong>iPhone / iPad:</strong> у Safari натисніть «Поділитися» → «На початковий екран».</p><p><strong>Windows:</strong> у Chrome або Edge скористайтеся кнопкою встановлення в адресному рядку чи меню браузера.</p><form method="dialog"><button type="submit" class="primary">Зрозуміло</button></form></dialog>
-  <script src="./data.js?v=2"></script><script src="./app.js?v=8"></script>
+  <script src="./data.js?v=2"></script><script src="./app.js?v=9"></script>
 </body>
 </html>

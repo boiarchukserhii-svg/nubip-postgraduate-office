@@ -24,8 +24,6 @@
   $('study-list').innerHTML=groups(data.study);
   $('document-list').innerHTML=groups(data.documents);
   $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="text-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
-  const quick=[data.services[0],data.documents[0].items[0],data.services[1]];
-  $('quick-links').innerHTML=quick.map(([title,,url,key])=>`<a class="quick-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${icon(key)}<span>${esc(title)}</span>${icon('external')}</a>`).join('')+`<button type="button" class="quick-link quick-contact" data-view="contacts" style="border:0;background:transparent;width:100%;text-align:left;font:inherit">${icon('phone')}<span>Контакти відділу</span>${icon('arrow')}</button>`;
   $('official-page').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
@@ -198,12 +196,21 @@
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastResumeCheck>300000){lastResumeCheck=Date.now();loadSnapshot();}});
   setInterval(()=>{if(!document.hidden)loadSnapshot();},900000);
 
-  const names=['home','study','documents','services','contacts','page'];
+  const names=['home','study','documents','services','contacts','page','section'];
   function setView(name,moveFocus=true){
+    if(name.startsWith('section/')){
+      const key=name.slice(8),index={aspirantura:0,doctorantura:1,defense:2}[key];
+      if(index===undefined){name='home';}else{
+        const group=data.study[index],items=[...group.items];
+        if(key==='defense')items.push(data.services[0]);
+        $('title-section').textContent=key==='defense'?'Захист дисертації':group.title;
+        $('section-links').innerHTML=items.map(card).join('');name='section';
+      }
+    }
     if(name.startsWith('page/')){let url;try{url=canonical(decodeURIComponent(name.slice(5)));}catch{}renderReader(url);name='page';}
     if(!names.includes(name))name='home';
     document.querySelectorAll('.view').forEach(node=>node.hidden=node.id!=='view-'+name);
-    document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===(name==='page'?readerOrigin:name);button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
+    document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===((name==='page'?readerOrigin:name)==='section'?'study':(name==='page'?readerOrigin:name));button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
     if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});if(restoreReaderScroll!==null){window.scrollTo({top:restoreReaderScroll,behavior:'instant'});restoreReaderScroll=null;}}
   }
   document.addEventListener('click',event=>{const button=event.target.closest('button[data-view]');if(!button)return;const name=button.dataset.view;if(location.hash==='#'+name)setView(name);else location.hash=name;});
