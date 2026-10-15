@@ -104,8 +104,10 @@ def page_from(html, url):
     if not title: raise ValueError('Немає заголовка сторінки')
     # Strip the page title from content; the app has its own accessible heading.
     content=''.join(render(n,url) for n in body.children if not isinstance(n,Node) or n.tag!='h1')
-    visible=' '.join(Document(content).root.text().split())
-    if len(visible)<25: raise ValueError('Зміст сторінки порожній або неповний')
+    content_doc=Document(content)
+    visible=' '.join(content_doc.root.text().split())
+    has_image=any(n.tag=='img' and urlsplit(n.attrs.get('src','')).scheme in {'https','http'} for n in content_doc.root.walk())
+    if len(visible)<25 and not has_image: raise ValueError('Зміст сторінки порожній або неповний')
     if len(content)>2_000_000: raise ValueError('Сторінка перевищує допустимий розмір')
     links=[]
     for n in body.walk():
@@ -143,13 +145,21 @@ def contact_from(html):
     address=next((n for n in footer.walk() if 'department-footer__address' in n.attrs.get('class','').split()),None)
     phones=[];emails=[]
     for n in footer.walk():
+        encoded=n.attrs.get('data-cfemail','')
+        href=n.attrs.get('href','')
+        if '/cdn-cgi/l/email-protection#' in href:encoded=href.split('#',1)[1]
+        if encoded:
+            try:
+                raw=bytes.fromhex(encoded);email_address=''.join(chr(b^raw[0]) for b in raw[1:])
+                if re.fullmatch(r'[\w.+-]+@[\w.-]+',email_address) and not any(e['label']==email_address for e in emails):emails.append({'label':email_address,'url':'mailto:'+email_address})
+            except (ValueError,IndexError):pass
         if n.tag!='a':continue
         href=n.attrs.get('href','')
         if href.startswith('tel:'):
             for label in re.findall(r'\(\d{3}\)\s*\d{3}-\d{2}-\d{2}',n.text()):
                 number='+38'+re.sub(r'\D','',label)
                 if not any(p['url']=='tel:'+number for p in phones):phones.append({'label':label,'url':'tel:'+number})
-        elif href.startswith('mailto:') and re.fullmatch(r'mailto:[\w.+-]+@[\w.-]+',href):emails.append({'label':href[7:],'url':href})
+        elif href.startswith('mailto:') and re.fullmatch(r'mailto:[\w.+-]+@[\w.-]+',href) and not any(e['url']==href for e in emails):emails.append({'label':href[7:],'url':href})
     if not address or not phones:return None
     return {'address':' '.join(address.text().split()),'phones':phones,'emails':emails}
 
@@ -219,3 +229,4 @@ def sync(base=ROOT):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--directory',type=Path,default=ROOT);args=parser.parse_args();sync(args.directory)
+
