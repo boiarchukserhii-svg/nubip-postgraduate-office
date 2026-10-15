@@ -23,7 +23,7 @@
   const groups=items=>items.map(group=>`<section><h3 class="group-title">${esc(group.title)}</h3><div class="link-grid">${group.items.map(card).join('')}</div></section>`).join('');
   $('study-list').innerHTML=groups(data.study);
   $('document-list').innerHTML=groups(data.documents);
-  $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="text-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
+  $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   $('official-page').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
