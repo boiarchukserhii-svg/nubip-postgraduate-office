@@ -1,0 +1,56 @@
+name: Оновлення відділу та публікація
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: office-pages
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Перевірити сайт НУБіП
+        run: python3 sync_office.py
+      - name: Зберегти оновлені дані
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- data.json; then
+            git add data.json
+            git commit -m "Оновлено інформацію відділу з сайту НУБіП"
+            git push
+          fi
+      - name: Підготувати файли застосунку
+        run: |
+          mkdir -p _site
+          cp index.html styles.css app.js data.js data.json manifest.webmanifest service-worker.js nubip-logo.png icon.svg icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png _site/
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    needs: collect
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Опублікувати застосунок
+        id: deployment
+        uses: actions/deploy-pages@v4
