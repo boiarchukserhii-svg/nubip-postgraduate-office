@@ -26,8 +26,7 @@
   $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="text-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   const quick=[data.services[0],data.documents[0].items[0],data.services[1]];
   $('quick-links').innerHTML=quick.map(([title,,url,key])=>`<a class="quick-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${icon(key)}<span>${esc(title)}</span>${icon('external')}</a>`).join('')+`<button type="button" class="quick-link quick-contact" data-view="contacts" style="border:0;background:transparent;width:100%;text-align:left;font:inherit">${icon('phone')}<span>Контакти відділу</span>${icon('arrow')}</button>`;
-  $('news-list').innerHTML=data.news.map(item=>`<a class="news-card" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"><div class="news-meta"><span>${esc(item.category)}</span><time datetime="${esc(item.date)}">${esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(item.date+'T12:00:00')))}</time></div><h3>${esc(item.title)}</h3><span class="text-link">Читати ${icon('external')}</span></a>`).join('');
-  $('official-page').href=data.source;$('source-news').href=data.source;
+  $('official-page').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
   let snapshot=null,loadingSnapshot=false,readerOrigin='documents',restoreReaderScroll=null;
@@ -132,10 +131,6 @@
     }
   }
   const formatSyncDate=value=>{try{return new Intl.DateTimeFormat('uk-UA',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Kyiv'}).format(new Date(value));}catch{return '';}};
-  function updateNews(){
-    const news=snapshot?.news?.length?snapshot.news:data.news;
-    $('news-list').innerHTML=news.map(item=>`<a class="news-card" href="${esc(item.url)}"><div class="news-meta"><span>${esc(item.category||'Новини відділу')}</span>${item.date?`<time datetime="${esc(item.date)}">${esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(new Date(item.date+'T12:00:00')))}</time>`:''}</div><h3>${esc(item.title)}</h3><span class="text-link">Читати ${icon('arrow')}</span></a>`).join('');
-  }
   function updateContacts(){
     const contact=snapshot?.contact;if(!contact)return;
     if(contact.address)$('contact-address').textContent=contact.address;
@@ -150,7 +145,7 @@
       if(next.version!==1||!next.pages||typeof next.pages!=='object')throw Error('schema');snapshot=next;
       const note=next.pending?'Готується перше автоматичне завантаження.':next.errors?.length?' Не всі сторінки вдалося оновити.':next.stats?.remaining?' Перевірка вкладених сторінок продовжиться під час наступного оновлення.':'';
       $('sync-status').textContent=next.checkedAt?'Перевірено: '+formatSyncDate(next.checkedAt)+' (київський час).'+note:note;
-      updateNews();updateContacts();
+      updateContacts();
     }catch{$('sync-status').textContent=snapshot?'Не вдалося перевірити оновлення. Використовуємо збережені дані.':'Дані поки недоступні. Перевірте підключення або дочекайтеся першого автоматичного оновлення.';}
     finally{clearTimeout(timeout);loadingSnapshot=false;$('refresh-data').disabled=false;if(location.hash.startsWith('#page/'))setView(location.hash.slice(1),false);}
   }
@@ -166,7 +161,7 @@
   }
   document.addEventListener('click',event=>{
     if(event.target.closest('button[data-view]')){readerTrail.length=0;return;}
-    const link=event.target.closest('a[href]');if(!link||link.id==='reader-source'||link.id==='official-page'||link.id==='source-news')return;
+    const link=event.target.closest('a[href]');if(!link||link.id==='reader-source'||link.id==='official-page')return;
     if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
     if(canRead(link.href)){event.preventDefault();openReader(link.href);}
   });
