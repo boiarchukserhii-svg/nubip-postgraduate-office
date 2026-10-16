@@ -62,6 +62,12 @@
     return [...doc.body.childNodes];
   }
   // App-specific presentation; the synchronized source remains unchanged.
+  function councilListName(fullName){
+    const parts=fullName.trim().split(/\s+/);
+    // Shorten only a recognizable patronymic, not arbitrary three-part names.
+    if(parts.length>=3&&/(?:ович|йович|евич|євич|Ілліч|Лукич|Савич|Кузьмич)(?:а|у|ем|і)?$|(?:івн|ївн|овн|евн|євн)(?:а|и|і|у|ою)$/iu.test(parts[parts.length-1]))parts.pop();
+    return parts.join(' ');
+  }
   function renderCouncils(page){
     if(new URL(page.url).pathname!=='/razovi-spetsializovani-vcheni-rady')return false;
     const source=document.createElement('div');source.append(...readableFragment(page.html,page.url));
@@ -94,7 +100,7 @@
       for(const entry of entries){
         const card=document.createElement('details');card.className='council-card';const head=document.createElement('summary');
         const badge=document.createElement('span');badge.className='council-badge';badge.textContent=entry.label;head.append(badge);
-        const candidate=document.createElement('span');candidate.className='council-candidate';candidate.append('Захист дисертації ');const strong=document.createElement('strong');strong.textContent=entry.name||'Інформація про здобувача';candidate.append(strong);head.append(candidate);card.append(head);
+        const candidate=document.createElement('span');candidate.className='council-candidate';candidate.append('Захист дисертації ');const strong=document.createElement('strong');candidate.dataset.fullName=entry.name;strong.textContent=councilListName(entry.name)||'Інформація про здобувача';candidate.append(strong);head.append(candidate);card.append(head);
         const body=document.createElement('div');body.className='council-body';
         const topic=entry.full.match(/на тему\s*:\s*(.+?)(?=,?\s*поданої на здобуття|\s+зі спеціальності|$)/i);
         const specialty=entry.full.match(/(?:зі\s+)?спеціальності\s+(.+?)(?=\s+(?:з\s+)?галузі знань|\s*\((?:рішення|Наказ)|$)/i);
@@ -291,7 +297,7 @@
     councilTrigger=summary;
     councilDialog.querySelector('h2').textContent=summary.querySelector('.council-badge').textContent;
     const body=councilDialog.querySelector('.council-dialog-scroll');body.replaceChildren();
-    const candidate=document.createElement('p');candidate.className='council-dialog-candidate';candidate.append(...[...summary.querySelector('.council-candidate').childNodes].map(n=>n.cloneNode(true)));body.append(candidate);
+    const candidate=document.createElement('p');candidate.className='council-dialog-candidate';candidate.append('Захист дисертації ');const fullName=document.createElement('strong');fullName.textContent=summary.querySelector('.council-candidate').dataset.fullName||summary.querySelector('.council-candidate strong').textContent;candidate.append(fullName);body.append(candidate);
     const detail=summary.parentElement.querySelector('.council-body').cloneNode(true);body.append(detail);
     document.body.classList.add('council-dialog-open');councilDialog.showModal();body.scrollTop=0;
   }
