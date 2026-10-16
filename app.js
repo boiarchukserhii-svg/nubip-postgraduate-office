@@ -260,7 +260,14 @@
       const body=document.createElement('div');body.className='council-body';
       const specialtyTitle=document.createElement('h3');specialtyTitle.className='doctoral-detail-title';specialtyTitle.textContent=specialties.length===1?'Спеціальність':'Спеціальності';body.append(specialtyTitle);
       const ul=document.createElement('ul');ul.className='doctoral-specialty-list';for(const specialty of specialties){const li=document.createElement('li');li.textContent=specialty;ul.append(li);}body.append(ul);
+      const leaders=fields.filter(item=>/^(?:Голова ради|Заступник|Вчений секретар)/i.test(item.label));
+      if(leaders.length){
+        const title=document.createElement('h3');title.className='doctoral-detail-title';title.textContent='Керівництво ради';body.append(title);
+        const grid=document.createElement('div');grid.className='doctoral-leaders';
+        for(const leader of leaders){const block=document.createElement('section');block.className='doctoral-person';const role=document.createElement('p');role.className='doctoral-person-role';role.textContent=leader.label;const name=document.createElement('p');name.className='doctoral-person-name';name.textContent=leader.value;block.append(role,name);grid.append(block);}body.append(grid);
+      }
       for(const item of fields){
+        if(leaders.includes(item))continue;
         if(/^Контактний телефон|^E-mail/i.test(item.label)){
           const p=document.createElement('p'),label=document.createElement('strong');label.textContent=item.label+': ';p.append(label);
           const link=document.createElement('a');link.textContent=item.value;link.href=/^E-mail/i.test(item.label)?'mailto:'+item.value:'tel:'+item.value.replace(/[^+\d]/g,'').replace(/^0/,'+380');p.append(link);body.append(p);
