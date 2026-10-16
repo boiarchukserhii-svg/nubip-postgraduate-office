@@ -19,11 +19,13 @@
     download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
   };
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.book)+'</svg>';
-  const card=([title,description,url,key])=>`<a class="link-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="feature-icon">${icon(key)}</span><div><h3>${esc(title)}</h3><p>${esc(description)}</p></div>${icon('external')}</a>`;
+  const conciseDefenseUrls=new Set(['https://nubip.edu.ua/razovi-spetsializovani-vcheni-rady','https://nubip.edu.ua/doktorski-spetsializovani-vcheni-rady','https://boiarchukserhii-svg.github.io/nubip-defenses/']);
+  const descriptionMarkup=(description,url)=>conciseDefenseUrls.has(url)?'':`<p>${esc(description)}</p>`;
+  const card=([title,description,url,key])=>`<a class="link-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="feature-icon">${icon(key)}</span><div><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}</div>${icon('external')}</a>`;
   const groups=items=>items.map(group=>`<section><h3 class="group-title">${esc(group.title)}</h3><div class="link-grid">${group.items.map(card).join('')}</div></section>`).join('');
   $('study-list').innerHTML=groups(data.study);
   $('document-list').innerHTML=groups(data.documents);
-  $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
+  $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}<a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   $('official-page').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
