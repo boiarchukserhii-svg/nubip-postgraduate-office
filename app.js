@@ -281,7 +281,6 @@
           const link=document.createElement('a');link.textContent=item.value;link.href=/^E-mail/i.test(item.label)?'mailto:'+item.value:'tel:'+item.value.replace(/[^+\d]/g,'').replace(/^0/,'+380');p.append(link);aboutContent.append(p);
         }else field(aboutContent,item.label,item.value);
       }
-      if(detailUrl){const link=document.createElement('a');link.className='secondary doctoral-more';link.href=detailUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Докладніше про раду ↗';body.append(link);}
       const archive=document.createElement('details');archive.className='doctoral-archive';
       const archiveTitle=document.createElement('summary');archiveTitle.textContent='Захисти дисертацій у раді';archive.append(archiveTitle);
       const archiveContent=document.createElement('div');archiveContent.className='doctoral-archive-content';archive.append(archiveContent);
