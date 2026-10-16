@@ -394,6 +394,49 @@
     $('reader-content').append(root);return true;
   }
 
+  function renderOnp(page){
+    const hub=page.url==='https://nubip.edu.ua/spetsialnosti-osvitno-naukovi-prohramy';
+    const annual=/\/osvitno-naukovi-prohramy-na-\d{4}-\d{4}-navchalnyy-rik$/.test(page.url);
+    if(!hub&&!annual)return false;
+    const doc=new DOMParser().parseFromString(page.html,'text/html');
+    const plain=node=>{const copy=node.cloneNode(true);copy.querySelectorAll('br').forEach(br=>br.replaceWith(' '));return copy.textContent.replace(/\s+/g,' ').trim();};
+    const root=document.createElement('section');root.className='onp-catalog';
+    if(hub){
+      const menu=document.createElement('div');menu.className='onp-year-menu';
+      const links=[...doc.querySelectorAll('a[href]')].filter(a=>/osvitno-naukovi-prohramy-na-\d{4}-\d{4}-navchalnyy-rik/.test(a.href));
+      if(!links.length)return false;
+      for(const source of links){const a=document.createElement('a');a.className='onp-year-link';a.href=source.href;const year=source.href.match(/na-(\d{4}-\d{4})-/)[1];a.textContent=year+' навчальний рік';a.setAttribute('aria-label',plain(source));menu.append(a);}
+      root.append(menu);
+      const about=document.createElement('details');about.className='onp-about';const title=document.createElement('summary');title.textContent='Про освітньо-наукові програми';about.append(title);
+      for(const node of doc.body.children)if(!node.querySelector('img')&&!node.querySelector('a[href*="osvitno-naukovi-prohramy-na-"]'))about.append(...readableFragment(node.outerHTML,page.url));
+      root.append(about);$('reader-content').append(root);return true;
+    }
+    const table=doc.querySelector('table');if(!table)return false;
+    // Expand both rowspans and colspans before reading columns: shared fields belong to every affected program.
+    const rows=[...table.rows],matrix=[];
+    rows.forEach((row,r)=>{matrix[r]||=[];let c=0;for(const cell of row.cells){while(matrix[r][c])c++;for(let dr=0;dr<cell.rowSpan;dr++){matrix[r+dr]||=[];for(let dc=0;dc<cell.colSpan;dc++)matrix[r+dr][c+dc]=cell;}c+=cell.colSpan;}});
+    const entries=matrix.slice(2).filter(row=>row[2]&&plain(row[2]));if(!entries.length)return false;
+    const tools=document.createElement('div');tools.className='accreditation-search';const label=document.createElement('label');label.htmlFor='onp-query';label.textContent='Пошук освітньо-наукової програми';const input=document.createElement('input');input.type='search';input.id='onp-query';input.placeholder='Назва ОНП або код спеціальності';input.autocomplete='off';const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Скинути';tools.append(label,input,reset);root.append(tools);
+    const list=document.createElement('div');list.className='onp-program-list';root.append(list);const records=[];
+    for(const row of entries){
+      const [field,specialty,program,documentCell]=row;
+      const fold=document.createElement('details');fold.className='onp-program';const title=document.createElement('summary');title.textContent=plain(program);fold.append(title);
+      const body=document.createElement('div');body.className='onp-program-body';
+      for(const [label,cell] of [['Галузь знань',field],['Спеціальність',specialty]]){const section=document.createElement('section');const heading=document.createElement('h3');heading.textContent=label;section.append(heading);const text=document.createElement('p');text.textContent=plain(cell);section.append(text);body.append(section);}
+      // Document icons are often the only content of anchors. Replace their artwork with a descriptive link.
+      const documents=document.createElement('div');documents.className='onp-documents';let index=0;
+      for(const cell of [...new Set([program,documentCell].filter(Boolean))]){
+        for(const source of cell.querySelectorAll('a[href]')){const a=document.createElement('a');a.href=source.href;a.target='_blank';a.rel='noopener noreferrer';a.className='secondary';a.textContent=(plain(source)||'Освітньо-наукова програма')+' ↗';a.setAttribute('aria-label','Відкрити документ: '+plain(program)+(++index>1?' ('+index+')':''));documents.append(a);}
+        if(cell===documentCell&&cell!==program){const copy=cell.cloneNode(true);copy.querySelectorAll('a,img').forEach(n=>n.remove());if(plain(copy))documents.append(...readableFragment(copy.innerHTML,page.url));}
+      }
+      if(documents.childNodes.length)body.append(documents);fold.append(body);list.append(fold);records.push({fold,text:plain(field)+' '+plain(specialty)+' '+plain(program)});
+    }
+    const empty=document.createElement('p');empty.className='onp-empty';empty.textContent='За цим запитом програм не знайдено.';empty.hidden=true;root.append(empty);
+    const normalize=s=>s.normalize('NFKC').toLocaleLowerCase('uk-UA').replace(/[’ʼ`]/g,"'").replace(/\s+/g,' ').trim();
+    const filter=()=>{const words=normalize(input.value).split(' ').filter(Boolean);let found=0;for(const record of records){record.fold.hidden=!words.every(word=>normalize(record.text).includes(word));if(!record.fold.hidden)found++;}empty.hidden=found>0;reset.disabled=!input.value;};input.oninput=filter;reset.onclick=()=>{input.value='';filter();input.focus();};filter();
+    $('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
@@ -402,7 +445,7 @@
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderRecommendations(page)&&!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderOnp(page)&&!renderRecommendations(page)&&!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed){$('reader-updated').hidden=false;$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';}
     }else{
