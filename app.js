@@ -359,6 +359,41 @@
     $('reader-content').append(root);return true;
   }
 
+  function renderRecommendations(page){
+    if(page.url!=='https://nubip.edu.ua/rekomendatsiyi-poperednikh-akredytatsiy')return false;
+    const doc=new DOMParser().parseFromString(page.html,'text/html'),table=doc.querySelector('table');
+    if(!table)return false;
+    const norm=node=>node.textContent.replace(/\s+/g,' ').trim(),groups=[];let current=null;
+    for(const row of table.rows){
+      const cells=[...row.cells],texts=cells.map(norm);
+      if(cells.length===1&&/^Освітньо-наукова програма/.test(texts[0])){current={title:texts[0],rows:[]};groups.push(current);continue;}
+      if(cells.length!==3||texts.every(t=>!t))continue;
+      if(/^Недоліки, виявлені/.test(texts[0])&&/Рекомендації/.test(texts[1]))continue;
+      if(!current)return false;
+      current.rows.push(cells);
+    }
+    if(!groups.length)return false;
+    const root=document.createElement('div');root.className='recommendations-list';
+    for(const group of groups){
+      const fold=document.createElement('details');fold.className='recommendations-program';
+      const title=document.createElement('summary');title.textContent=group.title.replace(/^Освітньо-наукова програма\s*/,'').replace(/^«\s*|\s*»$/g,'');fold.append(title);
+      const items=document.createElement('div');items.className='recommendations-items';fold.append(items);
+      group.rows.forEach((cells,index)=>{
+        const card=document.createElement('article');card.className='recommendation-card';
+        const heading=document.createElement('h3');heading.className='recommendation-number';heading.textContent='Пункт '+(index+1);card.append(heading);
+        cells.forEach((cell,i)=>{
+          const section=document.createElement('section');section.className='recommendation-part recommendation-part-'+i;
+          const label=document.createElement('h4');label.textContent=['Недолік','Рекомендація експертів','Виконання'][i];section.append(label);
+          const content=document.createElement('div');content.className='recommendation-text';content.append(...readableFragment(cell.innerHTML,page.url));section.append(content);card.append(section);
+        });items.append(card);
+      });root.append(fold);
+    }
+    // Keep any textual material outside the source table, retaining the app's image policy.
+    const remainder=doc.body.cloneNode(true);remainder.querySelector('table').remove();
+    if(remainder.textContent.trim())root.append(...readableFragment(remainder.innerHTML,page.url));
+    $('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
@@ -367,7 +402,7 @@
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderRecommendations(page)&&!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed){$('reader-updated').hidden=false;$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';}
     }else{
