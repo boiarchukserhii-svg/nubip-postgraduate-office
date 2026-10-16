@@ -303,6 +303,52 @@
     $('reader-content').append(list);return true;
   }
 
+  function renderAccreditation(page){
+    if(page.url!=='https://nubip.edu.ua/akredytatsiya-osvitno-naukovykh-prohram')return false;
+    const doc=new DOMParser().parseFromString(page.html,'text/html');
+    const children=[...doc.body.children],plain=node=>node.textContent.replace(/\s+/g,' ').trim();
+    const headings=children.filter(n=>/^Акредитація освітньо-наукової програми/.test(plain(n)));
+    if(!headings.length)return false;
+    const root=document.createElement('section');root.className='accreditation';
+    const intro=document.createElement('details');intro.className='accreditation-intro';const introTitle=document.createElement('summary');introTitle.textContent='Про акредитацію';intro.append(introTitle);const introText=document.createElement('div');introText.className='accreditation-intro-text';intro.append(introText);
+    for(const node of children.slice(0,children.indexOf(headings[0])))introText.append(...readableFragment(node.outerHTML,page.url));
+    root.append(intro);
+    const tools=document.createElement('div');tools.className='accreditation-search';
+    const label=document.createElement('label');label.htmlFor='accreditation-query';label.textContent='Пошук освітньо-наукової програми';
+    const input=document.createElement('input');input.id='accreditation-query';input.type='search';input.placeholder='Назва ОНП або спеціальності';input.autocomplete='off';
+    const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Скинути';tools.append(label,input,reset);root.append(tools);
+    const status=document.createElement('p');status.className='accreditation-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');root.append(status);
+    const list=document.createElement('div');list.className='accreditation-list';root.append(list);
+    const records=[],extras=[];
+    for(let i=0;i<headings.length;i++){
+      const heading=headings[i],copy=heading.cloneNode(true);copy.querySelectorAll('br').forEach(n=>n.replaceWith('\n'));
+      const text=copy.textContent.replace(/[\t ]+/g,' ').trim(),split=text.search(/\s*спеціальності\s*/i);
+      const title=(split>=0?text.slice(0,split):text).replace(/^Акредитація освітньо-наукової програми\s*/,'').trim().replace(/^«\s*|\s*»$/g,'');
+      const specialty=split>=0?text.slice(split).trim():'';
+      const fold=document.createElement('details');fold.className='accreditation-program';const summary=document.createElement('summary');summary.textContent=title;fold.append(summary);
+      const body=document.createElement('div');body.className='accreditation-program-body';
+      if(specialty){const p=document.createElement('p');p.className='accreditation-specialty';p.textContent=specialty;body.append(p);}
+      const start=children.indexOf(heading)+1,end=i+1<headings.length?children.indexOf(headings[i+1]):children.length;
+      for(const node of children.slice(start,end)){
+        if(node.querySelector('img')){extras.push(node);continue;}
+        body.append(...readableFragment(node.outerHTML,page.url));
+      }
+      fold.append(body);list.append(fold);records.push({fold,text:title+' '+specialty});
+    }
+    const empty=document.createElement('p');empty.className='accreditation-empty';empty.textContent='За цим запитом програм не знайдено.';empty.hidden=true;root.append(empty);
+    const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('uk-UA').replace(/[’ʼ`]/g,"'").replace(/\s+/g,' ').trim();
+    const filter=()=>{const words=normalize(input.value).split(' ').filter(Boolean);let found=0;for(const row of records){row.fold.hidden=!words.every(w=>normalize(row.text).includes(w));if(!row.fold.hidden)found++;}status.textContent=words.length?'Знайдено програм: '+found+' із '+records.length:'Освітньо-наукові програми: '+records.length;empty.hidden=found>0;reset.disabled=!input.value;};
+    input.addEventListener('input',filter);reset.onclick=()=>{input.value='';filter();input.focus();};filter();
+    if(extras.length){const extra=document.createElement('details');extra.className='accreditation-extra';const title=document.createElement('summary');title.textContent='Додаткові матеріали сторінки';extra.append(title);let index=0;for(const node of extras){const copy=node.cloneNode(true);for(const img of copy.querySelectorAll('img')){const span=doc.createElement('span');span.textContent=img.alt||'Додатковий матеріал '+(++index);img.replaceWith(span);}extra.append(...readableFragment(copy.outerHTML,page.url));}root.append(extra);}
+    const related=document.createElement('section');related.className='accreditation-related';const relatedTitle=document.createElement('h3');relatedTitle.textContent='Пов’язані матеріали';related.append(relatedTitle);
+    for(const [title,url] of [
+      ['Акредитовані освітньо-наукові програми','https://nubip.edu.ua/akredytovani-osvitno-naukovi-prohramy'],
+      ['Відомості про самооцінювання освітньо-наукових програм','https://nubip.edu.ua/vidomosti-samootsinyuvannya-osvitno-naukovykh-prohram'],
+      ['Рекомендації попередніх акредитацій','https://nubip.edu.ua/rekomendatsiyi-poperednikh-akredytatsiy']
+    ]){const a=document.createElement('a');a.href=url;a.className='secondary';a.textContent=title;related.append(a);}
+    root.append(related);$('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
@@ -311,7 +357,7 @@
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed){$('reader-updated').hidden=false;$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';}
     }else{
