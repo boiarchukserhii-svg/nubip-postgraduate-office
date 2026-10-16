@@ -369,7 +369,7 @@
       document.body.append(councilDialog);
       councilDialog.querySelector('.council-dialog-close').onclick=closeCouncilDialog;
       councilDialog.addEventListener('close',()=>{document.body.classList.remove('council-dialog-open');councilTrigger?.focus({preventScroll:true});});
-      councilDialog.addEventListener('click',event=>{if(event.target===councilDialog)closeCouncilDialog();if(event.target.closest('a[href]')&&!event.target.closest('[data-defense-external]'))closeCouncilDialog();});
+      councilDialog.addEventListener('click',event=>{if(event.target===councilDialog)closeCouncilDialog();if(event.target.closest('a[href]')&&!event.target.closest('[data-defense-external],.doctoral-passport'))closeCouncilDialog();});
       window.addEventListener('hashchange',closeCouncilDialog);
     }
     councilTrigger=summary;
