@@ -390,7 +390,7 @@
       if(index===undefined){name='home';}else{
         const group=data.study[index],items=[...group.items];
         if(key==='defense')items.push(data.services[0]);
-        $('title-section').textContent=key==='defense'?'Захист дисертації':group.title;
+        $('title-section').textContent=key==='defense'?'Спеціалізовані вчені ради':group.title;
         $('section-links').innerHTML=items.map(card).join('');name='section';
       }
     }
