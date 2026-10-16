@@ -268,8 +268,8 @@
       const leadershipFold=section('Керівництво ради');
       if(leaders.length){const grid=document.createElement('div');grid.className='doctoral-leaders';for(const leader of leaders)grid.append(personBlock(leader.value,leader.label));leadershipFold.append(grid);}
       else{const note=document.createElement('p');note.textContent='Відомості про керівництво ще не додано';leadershipFold.append(note);}
-      const compositionFold=section('Склад ради'+(composition?.persons?.length?' · '+composition.persons.length:''));
-      if(composition?.persons?.length){const grid=document.createElement('div');grid.className='doctoral-members';for(const person of composition.persons)grid.append(personBlock(person.name,person.role));compositionFold.append(grid);}
+      const compositionFold=section('Члени ради');
+      if(composition?.persons?.length){const grid=document.createElement('div');grid.className='doctoral-members';for(const person of composition.persons.filter(p=>p.role==='Член ради'))grid.append(personBlock(person.name,person.role));compositionFold.append(grid);}
       else{const note=document.createElement('p');note.textContent='Відомості про склад ще не додано';compositionFold.append(note);}
       for(const item of fields){
         if(/^(?:Голова ради|Заступник|Вчений секретар)/i.test(item.label))continue;
