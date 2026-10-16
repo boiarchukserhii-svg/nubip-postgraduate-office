@@ -53,3 +53,14 @@ body.council-dialog-open{overflow:hidden}.council-dialog{width:min(760px,calc(10
 .council-dialog .doctoral-about{width:100%;max-width:100%}.council-dialog .doctoral-about>summary{width:228px;max-width:100%}.council-dialog .doctoral-about-content{width:100%;box-sizing:border-box}
 
 .council-dialog .doctoral-specialty-list li.has-passport{padding:0}.council-dialog .doctoral-specialty-list a.doctoral-passport{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;min-height:48px;box-sizing:border-box;border-radius:11px;color:#174f9c;text-decoration:none;font-weight:inherit;line-height:inherit}.doctoral-passport>span:first-child{min-width:0}.doctoral-passport-arrow{flex-shrink:0;font-size:19px}.council-dialog a.doctoral-passport:hover{background:#dfebfc}.council-dialog a.doctoral-passport:focus-visible{outline:3px solid #195bb5;outline-offset:3px}
+
+
+.council-dialog .doctoral-archive{width:100%;box-sizing:border-box;margin:20px 0 0;padding:0;border:1px solid #d4e2f6;border-radius:13px;background:#f5f8fe;overflow:hidden}
+.council-dialog .doctoral-archive>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;padding:15px;min-height:50px;box-sizing:border-box;color:#195bb5;font-size:15px;font-weight:650;cursor:pointer;background:#eaf2ff}
+.council-dialog .doctoral-archive>summary::after,.council-dialog .doctoral-archive-year>summary::after{content:'⌄';flex-shrink:0}.council-dialog .doctoral-archive[open]>summary::after,.council-dialog .doctoral-archive-year[open]>summary::after{content:'⌃'}
+.council-dialog .doctoral-archive summary::-webkit-details-marker{display:none}.council-dialog .doctoral-archive-content{padding:10px}
+.council-dialog .doctoral-archive-year{margin:0 0 8px;padding:0;border:1px solid #dce6f3;border-radius:10px;background:white;overflow:hidden}.council-dialog .doctoral-archive-year:last-child{margin-bottom:0}
+.council-dialog .doctoral-archive-year>summary{display:flex;justify-content:space-between;gap:10px;list-style:none;padding:12px;min-height:46px;box-sizing:border-box;font-size:14px;font-weight:650;color:#264b7a;cursor:pointer}
+.council-dialog .doctoral-archive-year ul{list-style:none;margin:0;padding:0 10px 7px}.council-dialog .doctoral-archive-year li{margin:0;padding:0;border-top:1px solid #edf1f7}
+.council-dialog .doctoral-defense{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;min-height:44px;box-sizing:border-box;font-size:14px;font-weight:500;line-height:1.5;text-decoration:none}.doctoral-defense>span:first-child{min-width:0;overflow-wrap:anywhere}.doctoral-defense-arrow{flex-shrink:0}
+.council-dialog a.doctoral-defense:hover{background:#f0f5fc}.council-dialog .doctoral-archive summary:focus-visible,.council-dialog a.doctoral-defense:focus-visible{outline:3px solid #195bb5;outline-offset:-3px}.council-dialog .doctoral-archive-content>.muted{font-size:14px;margin:4px}
