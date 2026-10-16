@@ -271,12 +271,13 @@
       const compositionFold=section('Члени ради');
       if(composition?.persons?.length){const grid=document.createElement('div');grid.className='doctoral-members';for(const person of composition.persons.filter(p=>p.role==='Член ради'))grid.append(personBlock(person.name,person.role));compositionFold.append(grid);}
       else{const note=document.createElement('p');note.textContent='Відомості про склад ще не додано';compositionFold.append(note);}
+      const about=document.createElement('details');about.className='doctoral-about';const aboutTitle=document.createElement('summary');aboutTitle.className='secondary';aboutTitle.textContent='Відомості про раду ▾';about.append(aboutTitle);const aboutContent=document.createElement('div');aboutContent.className='doctoral-about-content';about.append(aboutContent);body.append(about);
       for(const item of fields){
         if(/^(?:Голова ради|Заступник|Вчений секретар)/i.test(item.label))continue;
         if(/^Контактний телефон|^E-mail/i.test(item.label)){
           const p=document.createElement('p'),label=document.createElement('strong');label.textContent=item.label+': ';p.append(label);
-          const link=document.createElement('a');link.textContent=item.value;link.href=/^E-mail/i.test(item.label)?'mailto:'+item.value:'tel:'+item.value.replace(/[^+\d]/g,'').replace(/^0/,'+380');p.append(link);body.append(p);
-        }else field(body,item.label,item.value);
+          const link=document.createElement('a');link.textContent=item.value;link.href=/^E-mail/i.test(item.label)?'mailto:'+item.value:'tel:'+item.value.replace(/[^+\d]/g,'').replace(/^0/,'+380');p.append(link);aboutContent.append(p);
+        }else field(aboutContent,item.label,item.value);
       }
       if(detailUrl){const link=document.createElement('a');link.className='secondary doctoral-more';link.href=detailUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Докладніше про раду ↗';body.append(link);}
       card.append(body);list.append(card);
