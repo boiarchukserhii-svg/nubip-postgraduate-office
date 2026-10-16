@@ -98,3 +98,8 @@ footer .footer-line{border-top:0;margin-top:0;padding-top:0;align-items:center}
 footer .official-page-button{min-height:44px;padding:11px 14px;border:1px solid #d4e2f6;border-radius:12px;background:#eaf2ff;color:#195bb5;font-size:13px;line-height:1.6;text-decoration:none}
 footer .sync-info{margin:22px 0 0;padding-top:18px;border-top:1px solid #d9dfe7}
 footer .install-button{margin-top:18px}
+
+footer .footer-line{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
+footer .footer-line .app-owner,footer .footer-line .official-page-button{display:flex;align-items:center;justify-content:center;min-width:0;box-sizing:border-box;min-height:44px}
+footer .footer-line .app-owner{display:block;align-content:center}footer .footer-line .official-page-button svg{flex-shrink:0}
+@media(max-width:520px){footer .footer-line{gap:8px}footer .footer-line .app-owner,footer .footer-line .official-page-button{font-size:11px;line-height:1.5;padding:9px 7px;overflow-wrap:normal;word-break:normal}footer .app-owner strong{white-space:nowrap}}
