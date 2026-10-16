@@ -283,14 +283,13 @@
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
     if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
-    $('reader-content').replaceChildren();$('reader-updated').textContent='';
+    $('reader-content').replaceChildren();$('reader-updated').textContent='';$('reader-updated').hidden=true;
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
       if(!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
-      if(failed)$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';
-      else if(page.checkedAt)$('reader-updated').textContent='Перевірено: '+formatSyncDate(page.checkedAt)+' (київський час)';
+      if(failed){$('reader-updated').hidden=false;$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';}
     }else{
       $('title-page').textContent='Завантаження інформації';
       $('reader-content').textContent=loadingSnapshot?'Завантажую збережені дані…':'Цю сторінку ще не завантажено автоматично. Після першої успішної перевірки сайту вона з’явиться тут.';
@@ -373,6 +372,7 @@
     }
     if(name.startsWith('page/')){let url;try{url=canonical(decodeURIComponent(name.slice(5)));}catch{}renderReader(url);name='page';}
     if(!names.includes(name))name='home';
+    $('sync-status').parentElement.hidden=name!=='home';
     document.querySelectorAll('.view').forEach(node=>node.hidden=node.id!=='view-'+name);
     document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===((name==='page'?readerOrigin:name)==='section'?'study':(name==='page'?readerOrigin:name));button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
     if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});if(restoreReaderScroll!==null){window.scrollTo({top:restoreReaderScroll,behavior:'instant'});restoreReaderScroll=null;}}
