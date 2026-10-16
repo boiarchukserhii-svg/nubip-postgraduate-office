@@ -93,3 +93,8 @@ body.council-dialog-open{overflow:hidden}.council-dialog{width:min(760px,calc(10
 }
 
 .home-support-grid{align-items:stretch}.home-support-grid .home-youtube{justify-content:center}
+
+footer .footer-line{border-top:0;margin-top:0;padding-top:0;align-items:center}
+footer .official-page-button{min-height:44px;padding:11px 14px;border:1px solid #d4e2f6;border-radius:12px;background:#eaf2ff;color:#195bb5;font-size:13px;line-height:1.6;text-decoration:none}
+footer .sync-info{margin:22px 0 0;padding-top:18px;border-top:1px solid #d9dfe7}
+footer .install-button{margin-top:18px}
