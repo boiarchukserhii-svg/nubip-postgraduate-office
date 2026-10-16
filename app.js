@@ -391,7 +391,8 @@
         const group=data.study[index],items=[...group.items];
         if(key==='defense')items.push(data.services[0]);
         $('title-section').textContent=key==='defense'?'Спеціалізовані вчені ради':group.title;
-        $('section-links').innerHTML=items.map(card).join('');name='section';
+        $('section-links').classList.toggle('aspirantura-grid',key==='aspirantura');
+        $('section-links').innerHTML=key==='aspirantura'?items.map(([title,description,url,iconKey],i)=>`<a class="home-direction aspirantura-direction" href="${esc(url)}"><span class="feature-icon">${icon(iconKey)}</span><h3>${esc(['Вступ до аспірантури','Освітньо-наукові програми','Освітній процес','Акредитація ОНП'][i]||title)}</h3></a>`).join(''):items.map(card).join('');name='section';
       }
     }
     if(name.startsWith('page/')){let url;try{url=canonical(decodeURIComponent(name.slice(5)));}catch{}renderReader(url);name='page';}
