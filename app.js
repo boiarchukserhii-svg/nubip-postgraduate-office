@@ -226,6 +226,52 @@
     return true;
   }
 
+  function renderDoctoralCouncils(page){
+    if(new URL(page.url).pathname!=='/doktorski-spetsializovani-vcheni-rady')return false;
+    const source=document.createElement('div');source.append(...readableFragment(page.html,page.url));
+    const headings=[...source.querySelectorAll('h2')].filter(n=>/^Д\s*\d+\.\d+\.\d+$/.test(n.textContent.trim()));
+    if(!headings.length)return false;
+    const list=document.createElement('div');list.className='doctoral-list';
+    const normalized=n=>n.textContent.replace(/\s+/g,' ').trim();
+    function field(parent,label,value){if(!value)return;const p=document.createElement('p'),strong=document.createElement('strong');strong.textContent=label+': ';p.append(strong,value);parent.append(p);}
+    for(const heading of headings){
+      const code=normalized(heading),nodes=[];let next=heading.nextElementSibling;
+      while(next&&!headings.includes(next)){nodes.push(next);next=next.nextElementSibling;}
+      const specialties=[],fields=[];let inSpecialties=false;let detailUrl=null;
+      for(const node of nodes){
+        const text=normalized(node);if(!text||/^_+$/.test(text))continue;
+        const detailsLink=[...node.querySelectorAll('a[href]')].find(a=>a.textContent.includes('Детальніше'));if(detailsLink){detailUrl=detailsLink.href;continue;}
+        if(/^Спеціальн(?:ості|ість)\s*:/.test(text)){inSpecialties=true;continue;}
+        const match=text.match(/^([^:]+):\s*(.*)$/);
+        if(match){inSpecialties=false;let value=match[2];const label=match[1];
+          if(/^E-mail/i.test(label)){
+            const link=node.querySelector('a[href]');if(link){const url=new URL(link.href);const hex=url.pathname==='/cdn-cgi/l/email-protection'?url.hash.slice(1):'';
+              if(/^(?:[a-f0-9]{2})+$/i.test(hex)){const bytes=hex.match(/../g).map(h=>parseInt(h,16));const decoded=bytes.slice(1).map(b=>String.fromCharCode(b^bytes[0])).join('');if(/^[\w.+-]+@[\w.-]+$/.test(decoded))value=decoded;}
+            }
+            if(value.includes('protected'))value='';
+          }
+          if(value)fields.push({label,value});
+        }else if(inSpecialties&&/^\d{2}\.\d{2}\.\d{2}\s/.test(text))specialties.push(text);
+      }
+      const card=document.createElement('details');card.className='council-card doctoral-card';
+      const summary=document.createElement('summary'),badge=document.createElement('span');badge.className='council-badge';badge.textContent=code;summary.append(badge);
+      const preview=document.createElement('span');preview.className='council-candidate doctoral-specialties';
+      for(const specialty of specialties){const line=document.createElement('span');line.textContent=specialty.replace(/^\d{2}\.\d{2}\.\d{2}\s*/,'');preview.append(line);}summary.append(preview);card.append(summary);
+      const body=document.createElement('div');body.className='council-body';
+      const specialtyTitle=document.createElement('h3');specialtyTitle.className='doctoral-detail-title';specialtyTitle.textContent=specialties.length===1?'Спеціальність':'Спеціальності';body.append(specialtyTitle);
+      const ul=document.createElement('ul');ul.className='doctoral-specialty-list';for(const specialty of specialties){const li=document.createElement('li');li.textContent=specialty;ul.append(li);}body.append(ul);
+      for(const item of fields){
+        if(/^Контактний телефон|^E-mail/i.test(item.label)){
+          const p=document.createElement('p'),label=document.createElement('strong');label.textContent=item.label+': ';p.append(label);
+          const link=document.createElement('a');link.textContent=item.value;link.href=/^E-mail/i.test(item.label)?'mailto:'+item.value:'tel:'+item.value.replace(/[^+\d]/g,'').replace(/^0/,'+380');p.append(link);body.append(p);
+        }else field(body,item.label,item.value);
+      }
+      if(detailUrl){const link=document.createElement('a');link.className='secondary doctoral-more';link.href=detailUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Докладніше про раду ↗';body.append(link);}
+      card.append(body);list.append(card);
+    }
+    $('reader-content').append(list);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
@@ -234,7 +280,7 @@
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed)$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';
       else if(page.checkedAt)$('reader-updated').textContent='Перевірено: '+formatSyncDate(page.checkedAt)+' (київський час)';
@@ -299,7 +345,9 @@
     councilTrigger=summary;
     councilDialog.querySelector('h2').textContent=summary.querySelector('.council-badge').textContent;
     const body=councilDialog.querySelector('.council-dialog-scroll');body.replaceChildren();
-    const candidate=document.createElement('p');candidate.className='council-dialog-candidate';candidate.append('Захист дисертації ');const fullName=document.createElement('strong');fullName.textContent=summary.querySelector('.council-candidate').dataset.fullName||summary.querySelector('.council-candidate strong').textContent;candidate.append(fullName);body.append(candidate);
+    const candidate=document.createElement('p');candidate.className='council-dialog-candidate';
+    if(summary.parentElement.classList.contains('doctoral-card'))candidate.textContent='Докторська спеціалізована вчена рада';
+    else{candidate.append('Захист дисертації ');const fullName=document.createElement('strong');fullName.textContent=summary.querySelector('.council-candidate').dataset.fullName||summary.querySelector('.council-candidate strong').textContent;candidate.append(fullName);}body.append(candidate);
     const detail=summary.parentElement.querySelector('.council-body').cloneNode(true);body.append(detail);
     document.body.classList.add('council-dialog-open');councilDialog.showModal();body.scrollTop=0;
   }
