@@ -51,3 +51,5 @@ body.council-dialog-open{overflow:hidden}.council-dialog{width:min(760px,calc(10
 .council-dialog .doctoral-about{width:228px;max-width:100%}.council-dialog .doctoral-more{width:228px;max-width:100%}
 
 .council-dialog .doctoral-about{width:100%;max-width:100%}.council-dialog .doctoral-about>summary{width:228px;max-width:100%}.council-dialog .doctoral-about-content{width:100%;box-sizing:border-box}
+
+.council-dialog .doctoral-specialty-list li.has-passport{padding:0}.council-dialog .doctoral-specialty-list a.doctoral-passport{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;min-height:48px;box-sizing:border-box;border-radius:11px;color:#174f9c;text-decoration:none;font-weight:inherit;line-height:inherit}.doctoral-passport>span:first-child{min-width:0}.doctoral-passport-arrow{flex-shrink:0;font-size:19px}.council-dialog a.doctoral-passport:hover{background:#dfebfc}.council-dialog a.doctoral-passport:focus-visible{outline:3px solid #195bb5;outline-offset:3px}
