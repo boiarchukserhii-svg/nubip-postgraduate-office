@@ -22,16 +22,17 @@
     pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
     external:'<path d="M14 3h7v7M21 3l-11 11M10 3H3v18h18v-7"/>',
     arrow:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
+    video:'<rect x="2" y="4" width="20" height="16" rx="4"/><path d="m10 8 6 4-6 4Z"/>',
     download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
   };
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.book)+'</svg>';
   const conciseDefenseUrls=new Set(['https://nubip.edu.ua/razovi-spetsializovani-vcheni-rady','https://nubip.edu.ua/doktorski-spetsializovani-vcheni-rady','https://boiarchukserhii-svg.github.io/nubip-defenses/']);
-  const descriptionMarkup=(description,url)=>conciseDefenseUrls.has(url)?'':`<p>${esc(description)}</p>`;
+  const descriptionMarkup=(description,url)=>!description||conciseDefenseUrls.has(url)?'':`<p>${esc(description)}</p>`;
   const card=([title,description,url,key])=>`<a class="link-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="feature-icon">${icon(key)}</span><div><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}</div>${icon('external')}</a>`;
   const groups=items=>items.map(group=>`<section><h3 class="group-title">${esc(group.title)}</h3><div class="link-grid">${group.items.map(card).join('')}</div></section>`).join('');
   $('study-list').innerHTML=groups(data.study);
   $('document-list').innerHTML=groups(data.documents);
-  $('service-list').innerHTML=data.services.map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}<a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
+  $('service-list').innerHTML=data.services.filter(item=>item[2]!=='https://nubip.edu.ua/komanda-3').concat([['YouTube','', 'https://www.youtube.com/@certification_dep_nubip','video']]).map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}<a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   $('official-page').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
@@ -755,7 +756,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
       const note=next.pending?'Готується перше автоматичне завантаження.':next.errors?.length?' Не всі сторінки вдалося оновити.':next.stats?.remaining?' Перевірка вкладених сторінок продовжиться під час наступного оновлення.':'';
       $('sync-status').textContent=next.checkedAt?'Перевірено: '+formatSyncDate(next.checkedAt)+' (київський час).'+note:note;
       if(next.education){const ed=next.education;const stamp=ed.checkedAt||ed.attemptedAt;$('sync-status').textContent=(ed.checkedAt?'Перевірено освітній процес: ':'Спроба перевірки освітнього процесу: ')+formatSyncDate(stamp)+' (київський час).'+(ed.errors?.length?' Частину даних не оновлено; показуємо останні збережені списки.':'');}
-      if(next.councils){const c=next.councils;const stamp=c.checkedAt||c.attemptedAt;$('sync-status').textContent='Перевірено освітній процес і ради: '+formatSyncDate(stamp)+' (київський час).'+((c.errors?.length||next.education?.errors?.length)?' Деякі джерела потребують перевірки; попередні відомості збережено.':'');}
+      if(next.councils){const c=next.councils;const stamp=c.checkedAt||c.attemptedAt;$('sync-status').textContent='Перевірено освітній процес і ради: '+formatSyncDate(stamp)+' (київський час).';}
       updateContacts();
     }catch{$('sync-status').textContent=snapshot?'Не вдалося перевірити оновлення. Використовуємо збережені дані.':'Дані поки недоступні. Перевірте підключення або дочекайтеся першого автоматичного оновлення.';}
     finally{clearTimeout(timeout);loadingSnapshot=false;$('refresh-data').disabled=false;if(location.hash.startsWith('#page/')){const top=window.scrollY;setView(location.hash.slice(1),false);window.scrollTo({top,behavior:'instant'});}}
@@ -842,7 +843,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
       const key=name.slice(8),index={aspirantura:0,doctorantura:1,defense:2}[key];
       if(index===undefined){name='home';}else{
         const group=data.study[index],items=[...group.items];
-        if(key==='defense')items.push(data.services[0]);
+
         $('title-section').textContent=key==='defense'?'Спеціалізовані вчені ради':group.title;
         $('section-links').classList.toggle('aspirantura-grid',key==='aspirantura');
         $('section-links').innerHTML=key==='aspirantura'?items.map(([title,description,url,iconKey],i)=>`<a class="home-direction aspirantura-direction" href="${esc(url)}"><span class="feature-icon">${icon(iconKey)}</span><h3>${esc(['Вступ до аспірантури','Освітньо-наукові програми','Освітній процес','Акредитація ОНП'][i]||title)}</h3></a>`).join(''):items.map(card).join('');name='section';
