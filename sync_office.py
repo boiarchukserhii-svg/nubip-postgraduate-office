@@ -238,7 +238,5 @@ if __name__=='__main__':
     if args.refresh_source:
         sync(args.directory,allow_stale=True)
     else:
-        saved=json.loads((args.directory/'data.json').read_text(encoding='utf-8-sig'))
-        if saved.get('version')!=1 or saved.get('pending') or not isinstance(saved.get('pages'),dict) or not saved['pages'] or not all(isinstance(p,dict) and p.get('title') and p.get('html') and p.get('url') for p in saved['pages'].values()):
-            raise RuntimeError('Немає придатного збереженого наповнення для публікації.')
-        print('Автоматичне читання сайту НУБіП призупинено. Публікуємо застосунок зі збереженим наповненням. Файл даних і дата перевірки не змінюються.')
+        from sync_education import refresh
+        refresh(args.directory)
