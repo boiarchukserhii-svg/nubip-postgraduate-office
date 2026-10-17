@@ -700,7 +700,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     function draw(){
       cards.replaceChildren();const query=normalize(tuitionQuery);
       const filtered=tuitionRows.filter(p=>normalize(p.name).includes(query)||normalize(p.specialty).includes(query));
-      status.textContent=filtered.length?'Програм: '+filtered.length:'За цим запитом програм не знайдено';
+      status.hidden=filtered.length>0;status.textContent=filtered.length?'':'За цим запитом програм не знайдено';
       for(const p of filtered){
         const card=document.createElement('article');card.className='tuition-card';
         const title=document.createElement('div');title.className='tuition-card-title';

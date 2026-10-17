@@ -1,6 +1,6 @@
 const PREFIX='nubip-office-shell-';
-const CACHE=PREFIX+'v75-budget-clean-20261017';
-const SHELL=['./','./index.html','./styles.css?v=75','./data.js?v=2','./data.json?v=2','./app.js?v=75','./manifest.webmanifest','./nubip-logo.png','./icon.svg','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
+const CACHE=PREFIX+'v76-search-spacing-20261017';
+const SHELL=['./','./index.html','./styles.css?v=76','./data.js?v=2','./data.json?v=2','./app.js?v=76','./manifest.webmanifest','./nubip-logo.png','./icon.svg','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
