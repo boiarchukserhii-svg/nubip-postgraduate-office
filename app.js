@@ -618,6 +618,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
 
   const admissionGroups=[["Умови вступу", [["Правила прийому", "https://nubip.edu.ua/sites/default/files/rich_text_files/Правила прийому 2026 26.08.pdf"], ["Державне замовлення", "https://nubip.edu.ua/rozpodil-mists-derzhavnoho-zamovlennya-dlya-pidhotovky-zdobuvachiv-stupenya-doktora-filosofiyi-na"], ["Вартість навчання", "https://nubip.edu.ua/vartist-navchannya-4"]]], ["Вступні випробування", [["Програми вступних випробувань", "https://nubip.edu.ua/prohrama-vstupnykh-vyprobuvan-5"], ["Розклад вступних іспитів", "https://nubip.edu.ua/rozklad-vstupnykh-vyprobuvan-u-zakladi-vyshchoyi-osvity"], ["Результати вступних випробувань", "https://nubip.edu.ua/rezultaty-vstupnykh-ispytiv-zi-spetsialnosti"]]], ["Зарахування", [["Рейтингові списки вступників", "https://nubip.edu.ua/reytynhovi-spysky-vstupnykiv-do-aspirantury-osnovna-sesiya"], ["Накази про зарахування", "https://nubip.edu.ua/nakazy-pro-zarakhuvannya"]]]];
 
+  const admissionOpenGroups=new Set();
   function renderAdmission(url){
     if(url!=='https://nubip.edu.ua/vstup-do-aspirantury')return false;
     $('title-page').textContent='Вступ до аспірантури';
@@ -635,6 +636,8 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
         else{link.target='_blank';link.rel='noopener noreferrer';}
         body.append(link);
       }
+      fold.open=admissionOpenGroups.has(title);
+      fold.addEventListener('toggle',()=>{if(!fold.isConnected)return;if(fold.open)admissionOpenGroups.add(title);else admissionOpenGroups.delete(title);});
       fold.append(summary,body);root.append(fold);
     }
     $('reader-content').append(root);return true;
@@ -770,6 +773,8 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
       if(canonical(current)===key&&anchor){const target=$('reader-content').querySelector('[id="content-'+CSS.escape(decodeURIComponent(anchor))+'"]');if(target)target.scrollIntoView({block:'start'});return;}
     }
     const current=document.querySelector('.view:not([hidden])');if(current&&current.id!=='view-page'){readerOrigin=current.id.replace('view-','');readerTrail.length=0;}
+    const admission=$('reader-content').querySelector('.admission-groups');
+    if(admission){admissionOpenGroups.clear();for(const fold of admission.querySelectorAll('.admission-fold[open]'))admissionOpenGroups.add(fold.querySelector('summary').textContent);}
     readerTrail.push({hash:location.hash||'#home',scrollY:window.scrollY});
     location.hash='page/'+encodeURIComponent(key);
   }
