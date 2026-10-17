@@ -613,6 +613,45 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     else electiveRoot=createElectiveForm(content,electiveCatalog,"https://script.google.com/macros/s/AKfycby-3xdOg6sCxftXAdU9AfppmIwFyVXLaca-NyU8DdsyYRzFNhK6VY_2hAJYZZs97UdK/exec",()=>{location.hash='#page/'+encodeURIComponent('https://nubip.edu.ua/osvitniy-protses-4');});
   }
 
+  const admissionGroups=[["Умови вступу", [["Правила прийому", "https://nubip.edu.ua/sites/default/files/rich_text_files/Правила прийому 2026 26.08.pdf"], ["Державне замовлення", "https://nubip.edu.ua/rozpodil-mists-derzhavnoho-zamovlennya-dlya-pidhotovky-zdobuvachiv-stupenya-doktora-filosofiyi-na"], ["Вартість навчання", "https://nubip.edu.ua/vartist-navchannya-4"]]], ["Вступні випробування", [["Програми вступних випробувань", "https://nubip.edu.ua/prohrama-vstupnykh-vyprobuvan-5"], ["Розклад вступних іспитів", "https://nubip.edu.ua/rozklad-vstupnykh-vyprobuvan-u-zakladi-vyshchoyi-osvity"], ["Результати вступних випробувань", "https://nubip.edu.ua/rezultaty-vstupnykh-ispytiv-zi-spetsialnosti"]]], ["Зарахування", [["Рейтингові списки вступників", "https://nubip.edu.ua/reytynhovi-spysky-vstupnykiv-do-aspirantury-osnovna-sesiya"], ["Накази про зарахування", "https://nubip.edu.ua/nakazy-pro-zarakhuvannya"]]]];
+
+  function renderAdmission(url){
+    if(url!=='https://nubip.edu.ua/vstup-do-aspirantury')return false;
+    $('title-page').textContent='Вступ до аспірантури';
+    const root=document.createElement('div');root.className='admission-groups';
+    for(const [title,items] of admissionGroups){
+      const fold=document.createElement('details');fold.className='admission-fold';
+      const summary=document.createElement('summary');summary.textContent=title;
+      const body=document.createElement('div');body.className='admission-links';
+      for(const [label,url] of items){
+        const link=document.createElement('a');link.className='admission-link';link.href=url;link.dataset.defenseExternal='true';
+        const text=document.createElement('span');text.textContent=label;
+        const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(text,arrow);
+        if(/\.pdf$/i.test(url)){link.dataset.admissionPdf='true';link.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();showAdmissionPdf(link);};}
+        else{link.target='_blank';link.rel='noopener noreferrer';}
+        body.append(link);
+      }
+      fold.append(summary,body);root.append(fold);
+    }
+    $('reader-content').append(root);return true;
+  }
+  let admissionPdf=null,admissionPdfTrigger=null;
+  function showAdmissionPdf(link){
+    if(!admissionPdf){
+      admissionPdf=document.createElement('dialog');admissionPdf.className='admission-pdf';admissionPdf.setAttribute('aria-labelledby','admission-pdf-title');
+      const header=document.createElement('header'),title=document.createElement('h2');title.id='admission-pdf-title';
+      const close=document.createElement('button');close.type='button';close.className='secondary';close.textContent='Закрити ×';close.onclick=()=>admissionPdf.close();header.append(title,close);
+      const fallback=document.createElement('a');fallback.className='admission-pdf-fallback';fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.dataset.defenseExternal='true';fallback.textContent='Якщо PDF не відображається — відкрити файл ↗';
+      const frame=document.createElement('iframe');frame.title='Документ PDF';admissionPdf.append(header,fallback,frame);document.body.append(admissionPdf);
+      admissionPdf.addEventListener('close',()=>{frame.removeAttribute('src');document.body.classList.remove('admission-pdf-open');admissionPdfTrigger?.focus({preventScroll:true});});
+      admissionPdf.addEventListener('click',e=>{if(e.target===admissionPdf)admissionPdf.close();});
+      window.addEventListener('hashchange',()=>{if(admissionPdf.open)admissionPdf.close();});
+    }
+    admissionPdfTrigger=link;admissionPdf.querySelector('h2').textContent=link.querySelector('span').textContent;
+    admissionPdf.querySelector('a').href=link.href;admissionPdf.querySelector('iframe').src=link.href;
+    document.body.classList.add('admission-pdf-open');admissionPdf.showModal();
+  }
+
   function renderReader(url){
     $('reader-back').hidden=false;
     $('reader-back').textContent='← Назад';
@@ -620,6 +659,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     // Snapshot refresh must not reset a form while a person is completing it.
     if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';$('reader-updated').hidden=true;
+    if(renderAdmission(url))return;
     if(renderNativeEducation(url))return;
     if(renderCertificate(url))return;
     if(page){
