@@ -40,7 +40,7 @@
   const sourceSeeds=new Set([...data.study.flatMap(g=>g.items.map(x=>x[2])),...data.documents.flatMap(g=>g.items.map(x=>x[2])),...data.services.map(x=>x[2])].filter(url=>url.startsWith('https://nubip.edu.ua/')).map(canonical));
   function canonical(value){try{const u=new URL(value,location.href);if(!['nubip.edu.ua','www.nubip.edu.ua'].includes(u.hostname))return null;return 'https://nubip.edu.ua'+(u.pathname.replace(/\/$/,'')||'/')+u.search;}catch{return null;}}
   function savedPage(url){return snapshot?.pages?.[url]||Object.values(snapshot?.pages||{}).find(p=>(p.aliases||[]).includes(url));}
-  function canRead(url){const key=canonical(url);return key&&(sourceSeeds.has(key)||key===budgetSource||savedPage(key)||educationNativePaths.has(new URL(key).pathname)||/^\/(?:news\/|shablony-|pamyat|osvitn|spetsialnosti|vstup-do-|normatyvno-|akredyt|vidomosti-|rekomendatsiyi-|zamovlennya-|komanda|akademichna-|antykoruptsiyni-|obhovorennya|anketuvannya|doktorski-spetsializovani|razovi-spetsializovani|reytynhovi-spysky-)/.test(new URL(key).pathname))&&!/\.(?:pdf|docx?|xlsx?|zip|png|jpe?g|webp)$/i.test(new URL(key).pathname);}
+  function canRead(url){const key=canonical(url);return key&&(sourceSeeds.has(key)||key===budgetSource||key===tuitionSource||savedPage(key)||educationNativePaths.has(new URL(key).pathname)||/^\/(?:news\/|shablony-|pamyat|osvitn|spetsialnosti|vstup-do-|normatyvno-|akredyt|vidomosti-|rekomendatsiyi-|zamovlennya-|komanda|akademichna-|antykoruptsiyni-|obhovorennya|anketuvannya|doktorski-spetsializovani|razovi-spetsializovani|reytynhovi-spysky-)/.test(new URL(key).pathname))&&!/\.(?:pdf|docx?|xlsx?|zip|png|jpe?g|webp)$/i.test(new URL(key).pathname);}
   function readableFragment(html,base){
     const doc=new DOMParser().parseFromString(html,'text/html');
     const allowed=new Set('p div section span h2 h3 h4 h5 h6 strong b em i u s br hr ul ol li blockquote pre code table thead tbody tfoot tr th td caption a img details summary figure figcaption dl dt dd sup sub'.split(' '));
@@ -628,7 +628,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
         const text=document.createElement('span');text.className='education-process-title';text.textContent=label;
         const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(text,arrow);
         if(/\.pdf$/i.test(url)){link.dataset.admissionPdf='true';link.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();showAdmissionPdf(link);};}
-        else if(url===budgetSource){delete link.dataset.defenseExternal;arrow.textContent='›';}
+        else if(url===budgetSource||url===tuitionSource){delete link.dataset.defenseExternal;arrow.textContent='›';}
         else{link.target='_blank';link.rel='noopener noreferrer';}
         body.append(link);
       }
@@ -681,6 +681,42 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     root.append(summary,label,status,list,note);$('reader-content').append(root);return true;
   }
 
+  const tuitionSource='https://nubip.edu.ua/vartist-navchannya-4';
+  const tuitionRows=[{"name": "Освітні, педагогічні науки", "specialty": "A1 Освітні науки", "annual": 63300, "total": 253200}, {"name": "Професійна освіта", "specialty": "A5 Професійна освіта", "annual": 63300, "total": 253200}, {"name": "Історія України", "specialty": "B9 Історія та археологія", "annual": 63300, "total": 253200}, {"name": "Філософія", "specialty": "B10 Філософія", "annual": 63300, "total": 253200}, {"name": "Економіка підприємств та галузей національного господарства", "specialty": "C1 Економіка та міжнародні економічні відносини", "annual": 73800, "total": 295200}, {"name": "Економіка природокористування та охорони навколишнього середовища", "specialty": "C1 Економіка та міжнародні економічні відносини", "annual": 73800, "total": 295200}, {"name": "Психологія", "specialty": "C4 Психологія", "annual": 73800, "total": 295200}, {"name": "Облік і оподаткування", "specialty": "D1 Облік і оподаткування", "annual": 73800, "total": 295200}, {"name": "Фінанси, банківська справа, страхування та фондовий ринок", "specialty": "D2 Фінанси, банківська справа, страхування та фондовий ринок", "annual": 73800, "total": 295200}, {"name": "Менеджмент", "specialty": "D3 Менеджмент", "annual": 73800, "total": 295200}, {"name": "Публічне управління та адміністрування", "specialty": "D4 Публічне управління та адміністрування", "annual": 73800, "total": 295200}, {"name": "Маркетинг", "specialty": "D5 Маркетинг", "annual": 73800, "total": 295200}, {"name": "Торгівля та підприємництво", "specialty": "D7 Торгівля", "annual": 73800, "total": 295200}, {"name": "Право", "specialty": "D8 Право", "annual": 73800, "total": 295200}, {"name": "Біологія", "specialty": "E1 Біологія та біохімія", "annual": 63300, "total": 253200}, {"name": "Біотехнології біологічних систем", "specialty": "E1 Біологія та біохімія", "annual": 63300, "total": 253200}, {"name": "Екологія", "specialty": "E2 Екологія", "annual": 63300, "total": 253200}, {"name": "Хімія", "specialty": "E3 Хімія", "annual": 63300, "total": 253200}, {"name": "Інформаційні технології", "specialty": "F3 Комп’ютерні науки", "annual": 73800, "total": 295200}, {"name": "Електроенергетика, електротехніка та електромеханіка", "specialty": "G3 Електрична інженерія", "annual": 63300, "total": 253200}, {"name": "Автоматизація та комп’ютерно-інтегровані технології", "specialty": "G7 Автоматизація, комп’ютерно-інтегровані технології та робототехніка", "annual": 63300, "total": 253200}, {"name": "Галузеве машинобудування", "specialty": "G11 Машинобудування", "annual": 63300, "total": 253200}, {"name": "Харчові технології", "specialty": "G13 Харчові технології", "annual": 63300, "total": 253200}, {"name": "Деревообробні та меблеві технології", "specialty": "G14 Деревообробні та меблеві технології", "annual": 63300, "total": 253200}, {"name": "Будівництво та цивільна інженерія", "specialty": "G19 Будівництво та цивільна інженерія", "annual": 63300, "total": 253200}, {"name": "Агрономія", "specialty": "H1 Агрономія", "annual": 63300, "total": 253200}, {"name": "Захист і карантин рослин", "specialty": "H1 Агрономія", "annual": 63300, "total": 253200}, {"name": "Садівництво та виноградарство", "specialty": "H1 Агрономія", "annual": 63300, "total": 253200}, {"name": "Тваринництво", "specialty": "H2 Тваринництво", "annual": 63300, "total": 253200}, {"name": "Садово-паркове господарство", "specialty": "H3 Садово-паркове господарство", "annual": 63300, "total": 253200}, {"name": "Лісове господарство", "specialty": "H4 Лісове господарство", "annual": 63300, "total": 253200}, {"name": "Водні біоресурси та аквакультура", "specialty": "H5 Водні біоресурси та аквакультура", "annual": 63300, "total": 253200}, {"name": "Незаразна патологія тварин", "specialty": "H6 Ветеринарна медицина", "annual": 66400, "total": 265600}, {"name": "Заразна патологія тварин", "specialty": "H6 Ветеринарна медицина", "annual": 66400, "total": 265600}, {"name": "Автомобільний транспорт", "specialty": "J8 Автомобільний транспорт", "annual": 63300, "total": 253200}];
+
+  let tuitionQuery='';
+  function renderTuition(url){
+    if(url!==tuitionSource)return false;
+    $('title-page').textContent='Вартість навчання';
+    const root=document.createElement('div');root.className='tuition-native';
+    const year=document.createElement('div');year.className='tuition-year';year.textContent='2026-2027 навчальний рік';
+    const note=document.createElement('p');note.className='tuition-note';note.textContent='Для громадян України · Денна, вечірня та заочна форми';
+    const label=document.createElement('label');label.className='tuition-search-label';label.textContent='Пошук ОНП або спеціальності';
+    const search=document.createElement('input');search.type='search';search.placeholder='Назва програми або код';search.value=tuitionQuery;label.append(search);
+    const status=document.createElement('p');status.className='tuition-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+    const cards=document.createElement('div');cards.className='tuition-cards';
+    const normalize=s=>s.toLocaleLowerCase('uk').replace(/[’ʼ`]/g,"'").replace(/\s+/g,' ').trim().replace(/^[авсенкмортх](?=\d)/,c=>({'а':'a','в':'b','с':'c','е':'e','н':'h','к':'k','м':'m','о':'o','р':'p','т':'t','х':'x'}[c]));
+    const money=n=>new Intl.NumberFormat('uk-UA',{maximumFractionDigits:0}).format(n)+' грн';
+    function draw(){
+      cards.replaceChildren();const query=normalize(tuitionQuery);
+      const filtered=tuitionRows.filter(p=>normalize(p.name).includes(query)||normalize(p.specialty).includes(query));
+      status.textContent=filtered.length?'Програм: '+filtered.length:'За цим запитом програм не знайдено';
+      for(const p of filtered){
+        const card=document.createElement('article');card.className='tuition-card';
+        const title=document.createElement('div');title.className='tuition-card-title';
+        const name=document.createElement('h3');name.textContent=p.name;const code=document.createElement('p');code.textContent=p.specialty;title.append(name,code);
+        const prices=document.createElement('div');prices.className='tuition-prices';
+        for(const [label,value,cls] of [['За рік',p.annual,''],['За весь період',p.total,'tuition-full']]){
+          const block=document.createElement('div');block.className=cls;
+          const small=document.createElement('small');small.textContent=label;const strong=document.createElement('strong');strong.textContent=money(value);block.append(small,strong);prices.append(block);
+        }
+        card.append(title,prices);cards.append(card);
+      }
+    }
+    search.oninput=()=>{tuitionQuery=search.value;draw();};draw();
+    root.append(year,note,label,status,cards);$('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     $('reader-back').hidden=false;
     $('reader-back').textContent='← Назад';
@@ -688,6 +724,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     // Snapshot refresh must not reset a form while a person is completing it.
     if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';$('reader-updated').hidden=true;
+    if(renderTuition(url))return;
     if(renderBudget(url))return;
     if(renderAdmission(url))return;
     if(renderNativeEducation(url))return;
