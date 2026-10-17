@@ -40,7 +40,7 @@
   const sourceSeeds=new Set([...data.study.flatMap(g=>g.items.map(x=>x[2])),...data.documents.flatMap(g=>g.items.map(x=>x[2])),...data.services.map(x=>x[2])].filter(url=>url.startsWith('https://nubip.edu.ua/')).map(canonical));
   function canonical(value){try{const u=new URL(value,location.href);if(!['nubip.edu.ua','www.nubip.edu.ua'].includes(u.hostname))return null;return 'https://nubip.edu.ua'+(u.pathname.replace(/\/$/,'')||'/')+u.search;}catch{return null;}}
   function savedPage(url){return snapshot?.pages?.[url]||Object.values(snapshot?.pages||{}).find(p=>(p.aliases||[]).includes(url));}
-  function canRead(url){const key=canonical(url);return key&&(sourceSeeds.has(key)||savedPage(key)||educationNativePaths.has(new URL(key).pathname)||/^\/(?:news\/|shablony-|pamyat|osvitn|spetsialnosti|vstup-do-|normatyvno-|akredyt|vidomosti-|rekomendatsiyi-|zamovlennya-|komanda|akademichna-|antykoruptsiyni-|obhovorennya|anketuvannya|doktorski-spetsializovani|razovi-spetsializovani|reytynhovi-spysky-)/.test(new URL(key).pathname))&&!/\.(?:pdf|docx?|xlsx?|zip|png|jpe?g|webp)$/i.test(new URL(key).pathname);}
+  function canRead(url){const key=canonical(url);return key&&(sourceSeeds.has(key)||key===budgetSource||savedPage(key)||educationNativePaths.has(new URL(key).pathname)||/^\/(?:news\/|shablony-|pamyat|osvitn|spetsialnosti|vstup-do-|normatyvno-|akredyt|vidomosti-|rekomendatsiyi-|zamovlennya-|komanda|akademichna-|antykoruptsiyni-|obhovorennya|anketuvannya|doktorski-spetsializovani|razovi-spetsializovani|reytynhovi-spysky-)/.test(new URL(key).pathname))&&!/\.(?:pdf|docx?|xlsx?|zip|png|jpe?g|webp)$/i.test(new URL(key).pathname);}
   function readableFragment(html,base){
     const doc=new DOMParser().parseFromString(html,'text/html');
     const allowed=new Set('p div section span h2 h3 h4 h5 h6 strong b em i u s br hr ul ol li blockquote pre code table thead tbody tfoot tr th td caption a img details summary figure figcaption dl dt dd sup sub'.split(' '));
@@ -628,6 +628,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
         const text=document.createElement('span');text.className='education-process-title';text.textContent=label;
         const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(text,arrow);
         if(/\.pdf$/i.test(url)){link.dataset.admissionPdf='true';link.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();showAdmissionPdf(link);};}
+        else if(url===budgetSource){delete link.dataset.defenseExternal;arrow.textContent='›';}
         else{link.target='_blank';link.rel='noopener noreferrer';}
         body.append(link);
       }
@@ -652,6 +653,34 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     document.body.classList.add('admission-pdf-open');admissionPdf.showModal();
   }
 
+  const budgetSource="https://nubip.edu.ua/rozpodil-mists-derzhavnoho-zamovlennya-dlya-pidhotovky-zdobuvachiv-stupenya-doktora-filosofiyi-na";
+  const budgetRows=[["Освітні, педагогічні науки", 5], ["Професійна освіта", 4], ["Історія України", 1], ["Філософія", 2], ["Економіка підприємств та галузей національного господарства", 6], ["Економіка природокористування та охорони навколишнього середовища", 6], ["Психологія", 1], ["Облік і оподаткування", 0], ["Фінанси, банківська справа, страхування та фондовий ринок", 1], ["Менеджмент", 1], ["Публічне управління та адміністрування", 1], ["Маркетинг", 1], ["Торгівля та підприємництво", 1], ["Право", 3], ["Біологія", 1], ["Біотехнології біологічних систем", 8], ["Екологія", 20], ["Хімія", 1], ["Інформаційні технології", 8], ["Електроенергетика, електротехніка та електромеханіка", 9], ["Автоматизація, комп’ютерно-інтегровані технології та робототехніка", 9], ["Галузеве машинобудування", 6], ["Харчові технології", 10], ["Деревообробні та меблеві технології", 2], ["Будівництво та цивільна інженерія", 4], ["Агрономія", 23], ["Захист і карантин рослин", 5], ["Тваринництво", 7], ["Садово-паркове господарство", 3], ["Лісове господарство", 5], ["Водні біоресурси та аквакультура", 2], ["Заразна патологія тварин", 6], ["Незаразна патологія тварин", 14], ["Автомобільний транспорт", 0]];
+
+  let budgetQuery='';
+  function renderBudget(url){
+    if(url!==budgetSource)return false;
+    $('title-page').textContent='Державне замовлення';
+    const root=document.createElement('div');root.className='admission-budget';
+    const summary=document.createElement('div');summary.className='budget-overview';
+    const year=document.createElement('span');year.textContent='2026 рік';
+    const total=document.createElement('strong');total.textContent='176 бюджетних місць';summary.append(year,total);
+    const label=document.createElement('label');label.className='budget-search-label';label.textContent='Пошук ОНП';
+    const search=document.createElement('input');search.type='search';search.placeholder='Введіть назву програми';search.value=budgetQuery;label.append(search);
+    const status=document.createElement('p');status.className='budget-result-count';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+    const list=document.createElement('ul');list.className='budget-list';
+    const normalize=s=>s.toLocaleLowerCase('uk').replace(/[’ʼ`]/g,"'").replace(/\s+/g,' ').trim();
+    function draw(){
+      list.replaceChildren();const query=normalize(budgetQuery),filtered=budgetRows.filter(([name])=>normalize(name).includes(query));
+      status.textContent=filtered.length?'Програм: '+filtered.length:'За цим запитом програм не знайдено';
+      for(const [name,count] of filtered){const row=document.createElement('li');row.className='budget-row';
+        const title=document.createElement('span');title.textContent=name;
+        const value=document.createElement('span');value.className='budget-places';value.textContent=count;value.setAttribute('aria-label','Бюджетних місць: '+count);row.append(title,value);list.append(row);}
+    }
+    search.oninput=()=>{budgetQuery=search.value;draw();};draw();
+    const note=document.createElement('p');note.className='budget-note';note.textContent='Розподіл затверджено Вченою радою Університету 04.09.2026.';
+    root.append(summary,label,status,list,note);$('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     $('reader-back').hidden=false;
     $('reader-back').textContent='← Назад';
@@ -659,6 +688,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     // Snapshot refresh must not reset a form while a person is completing it.
     if(url==='https://nubip.edu.ua/zamovlennya-dovidok'&&$('reader-content').querySelector('.certificate-native'))return;
     $('reader-content').replaceChildren();$('reader-updated').textContent='';$('reader-updated').hidden=true;
+    if(renderBudget(url))return;
     if(renderAdmission(url))return;
     if(renderNativeEducation(url))return;
     if(renderCertificate(url))return;
