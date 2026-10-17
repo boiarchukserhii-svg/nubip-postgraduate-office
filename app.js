@@ -472,6 +472,20 @@
     $('reader-content').append(root);return true;
   }
 
+
+  function renderEducationProcess(page){
+    if(new URL(page.url).pathname!=='/osvitniy-protses-4')return false;
+    const doc=new DOMParser().parseFromString(page.html,'text/html');
+    const links=[...doc.querySelectorAll('a[href]')];
+    const find=text=>links.find(a=>a.textContent.replace(/\s+/g,' ').trim().toLocaleLowerCase('uk').includes(text))?.getAttribute('href');
+    const root=document.createElement('div');root.className='education-process-grid';
+    const makeLink=(title,href)=>{const el=document.createElement(href?'a':'section');el.className='education-process-card'+(href?'':' education-process-pending');const name=document.createElement('span');name.className='education-process-title';name.textContent=title;el.append(name);if(href){el.href=new URL(href,page.url).href;el.target='_blank';el.rel='noopener noreferrer';const arrow=document.createElement('span');arrow.className='education-process-arrow';arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');el.append(arrow);}else{const note=document.createElement('span');note.className='education-process-note';note.textContent='Матеріали ще не додано';el.append(note);}return el;};
+    root.append(makeLink('Графік освітнього процесу',find('графік освітнього процесу')));
+    const schedule=document.createElement('details');schedule.className='education-process-schedule';const summary=document.createElement('summary');summary.textContent='Розклад занять';schedule.append(summary);const body=document.createElement('div');body.className='education-process-schedule-body';body.append(makeLink('Очна форма навчання',find('розклад занять (очна)')),makeLink('Заочна форма навчання',find('розклад занять (заочна)')));schedule.append(body);root.append(schedule);
+    root.append(makeLink('Розклад екзаменів',find('розклад складання екзаменів')),makeLink('Розклад дзвінків',find('розклад дзвінків')),makeLink('Групи аспірантів',find('групи аспірантів')),makeLink('Вибір освітніх компонентів',find('електронний формат вибору')));
+    $('reader-content').append(root);return true;
+  }
+
   function renderReader(url){
     const page=savedPage(url);
     // Snapshot refresh must not reset a form while a person is completing it.
@@ -480,7 +494,7 @@
     if(renderCertificate(url))return;
     if(page){
       $('title-page').textContent=page.title;
-      if(!renderOnp(page)&&!renderRecommendations(page)&&!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
+      if(!renderEducationProcess(page)&&!renderOnp(page)&&!renderRecommendations(page)&&!renderSelfAssessment(page)&&!renderAccreditation(page)&&!renderDoctoralCouncils(page)&&!renderTeam(page)&&!renderCouncils(page))$('reader-content').append(...readableFragment(page.html,page.url));
       const failed=snapshot.errors?.some(item=>item.url===url||(page.aliases||[]).includes(item.url));
       if(failed){$('reader-updated').hidden=false;$('reader-updated').textContent='Показано збережений зміст: під час останньої перевірки джерело було недоступне.';}
     }else{
