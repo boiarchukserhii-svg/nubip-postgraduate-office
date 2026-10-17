@@ -27,7 +27,7 @@
   };
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.book)+'</svg>';
   const conciseDefenseUrls=new Set(['https://nubip.edu.ua/razovi-spetsializovani-vcheni-rady','https://nubip.edu.ua/doktorski-spetsializovani-vcheni-rady','https://boiarchukserhii-svg.github.io/nubip-defenses/']);
-  const descriptionMarkup=(description,url)=>!description||conciseDefenseUrls.has(url)?'':`<p>${esc(description)}</p>`;
+  const descriptionMarkup=(description,url)=>!description||url==='https://nubip.edu.ua/zamovlennya-dovidok'||conciseDefenseUrls.has(url)?'':`<p>${esc(description)}</p>`;
   const card=([title,description,url,key])=>`<a class="link-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="feature-icon">${icon(key)}</span><div><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}</div>${icon('external')}</a>`;
   const groups=items=>items.map(group=>`<section><h3 class="group-title">${esc(group.title)}</h3><div class="link-grid">${group.items.map(card).join('')}</div></section>`).join('');
   $('study-list').innerHTML=groups(data.study);
