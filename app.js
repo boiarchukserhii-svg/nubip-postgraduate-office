@@ -35,6 +35,7 @@
   $('document-list').innerHTML=groups(data.documents);
   $('service-list').innerHTML=data.services.filter(item=>item[2]!=='https://nubip.edu.ua/komanda-3').concat([['YouTube','', 'https://www.youtube.com/@certification_dep_nubip','video']]).map(([title,description,url,key])=>`<article class="service-card panel"><span class="feature-icon">${icon(key)}</span><h3>${esc(title)}</h3>${descriptionMarkup(description,url)}<a class="secondary service-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Відкрити ${icon('external')}</a></article>`).join('');
   $('official-page').href=data.source;
+  $('contact-address').href=data.source;
   document.querySelectorAll('[data-icon]').forEach(node=>node.innerHTML=icon(node.dataset.icon));
   // Website pages are read from a server-generated snapshot, not fetched from NUBiP in the browser.
   let snapshot=null,loadingSnapshot=false,readerOrigin='documents',restoreReaderScroll=null;
