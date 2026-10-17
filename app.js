@@ -22,6 +22,7 @@
     pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
     external:'<path d="M14 3h7v7M21 3l-11 11M10 3H3v18h18v-7"/>',
     arrow:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
+    mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
     video:'<rect x="2" y="4" width="20" height="16" rx="4"/><path d="m10 8 6 4-6 4Z"/>',
     download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
   };
@@ -745,7 +746,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     const contact=snapshot?.contact;if(!contact)return;
     if(contact.address)$('contact-address').textContent=contact.address;
     if(contact.phones?.length)$('contact-phones').innerHTML=contact.phones.map(p=>/^tel:\+?\d+$/.test(p.url)?`<a class="phone-link" href="${esc(p.url)}">${esc(p.label)}</a>`:'').join('');
-    $('contact-emails').innerHTML=(contact.emails||[]).map(p=>/^mailto:[\w.+-]+@[\w.-]+$/.test(p.url)?`<a class="text-link contact-email" href="${esc(p.url)}">${esc(p.label)}</a>`:'').join('');
+    if(contact.emails?.length)$('contact-emails').innerHTML=contact.emails.map(p=>/^mailto:[\w.+-]+@[\w.-]+$/.test(p.url)?`<a class="text-link contact-email" href="${esc(p.url)}">${esc(p.label)}</a>`:'').join('');
   }
   async function loadSnapshot(){
     if(loadingSnapshot)return;loadingSnapshot=true;$('refresh-data').disabled=true;
