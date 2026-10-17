@@ -406,10 +406,12 @@
       const links=[...doc.querySelectorAll('a[href]')].filter(a=>/osvitno-naukovi-prohramy-na-\d{4}-\d{4}-navchalnyy-rik/.test(a.href));
       if(!links.length)return false;
       for(const source of links){const a=document.createElement('a');a.className='onp-year-link';a.href=source.href;const year=source.href.match(/na-(\d{4}-\d{4})-/)[1];a.textContent=year+' навчальний рік';a.setAttribute('aria-label',plain(source));menu.append(a);}
-      root.append(menu);
-      const about=document.createElement('details');about.className='onp-about';const title=document.createElement('summary');title.textContent='Про освітньо-наукові програми';about.append(title);
-      for(const node of doc.body.children)if(!node.querySelector('img')&&!node.querySelector('a[href*="osvitno-naukovi-prohramy-na-"]'))about.append(...readableFragment(node.outerHTML,page.url));
-      root.append(about);$('reader-content').append(root);return true;
+      const specialties=document.createElement('details');specialties.className='onp-specialties';const specialtiesTitle=document.createElement('summary');specialtiesTitle.textContent='Спеціальності';specialties.append(specialtiesTitle);
+      const note=document.createElement('p');note.className='onp-specialties-year';note.textContent='Вступ 2026';specialties.append(note);
+      const list=document.createElement('div');list.className='onp-specialties-fields';const ul=document.createElement('ul');
+      for(const specialty of ["A1 Освітні науки", "A5 Професійна освіта (за спеціалізаціями)", "B9 Історія та археологія", "B10 Філософія", "C1 Економіка", "C4 Психологія", "D1 Облік і оподаткування", "D2 Фінанси, банківська справа, страхування та фондовий ринок", "D3 Менеджмент", "D4 Публічне управління та адміністрування", "D5 Маркетинг", "D7 Торгівля", "D8 Право", "E1 Біологія та біохімія", "E2 Екологія", "E3 Хімія", "F3 Комп’ютерні науки", "G3 Електрична інженерія", "G7 Автоматизація, комп’ютерно-інтегровані технології та робототехніка", "G11 Машинобудування (за спеціалізаціями)", "G13 Харчові технології", "G14 Деревообробні та меблеві технології", "G19 Будівництво та цивільна інженерія", "H1 Агрономія", "H2 Тваринництво", "H3 Садово-паркове господарство", "H4 Лісове господарство", "H5 Водні біоресурси та аквакультура", "H6 Ветеринарна медицина", "J8 Автомобільний транспорт"]){const li=document.createElement('li');li.textContent=specialty;ul.append(li);}list.append(ul);specialties.append(list);
+      const source=document.createElement('a');source.className='onp-specialties-source';source.href="https://nubip.edu.ua/sites/default/files/rich_text_files/%D0%9F%D1%80%D0%B0%D0%B2%D0%B8%D0%BB%D0%B0%20%D0%BF%D1%80%D0%B8%D0%B9%D0%BE%D0%BC%D1%83%202026%2026.08.pdf#page=80";source.target='_blank';source.rel='noopener noreferrer';source.textContent='Правила прийому 2026, додаток 9 ↗';specialties.append(source);
+      root.append(specialties,menu);$('reader-content').append(root);return true;
     }
     const table=doc.querySelector('table');if(!table)return false;
     // Expand both rowspans and colspans before reading columns: shared fields belong to every affected program.
