@@ -618,14 +618,14 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
   function renderAdmission(url){
     if(url!=='https://nubip.edu.ua/vstup-do-aspirantury')return false;
     $('title-page').textContent='Вступ до аспірантури';
-    const root=document.createElement('div');root.className='admission-groups';
+    const root=document.createElement('div');root.className='admission-groups onp-hub';
     for(const [title,items] of admissionGroups){
-      const fold=document.createElement('details');fold.className='admission-fold';
+      const fold=document.createElement('details');fold.className='admission-fold onp-hub-section';
       const summary=document.createElement('summary');summary.textContent=title;
       const body=document.createElement('div');body.className='admission-links';
       for(const [label,url] of items){
-        const link=document.createElement('a');link.className='admission-link';link.href=url;link.dataset.defenseExternal='true';
-        const text=document.createElement('span');text.textContent=label;
+        const link=document.createElement('a');link.className='admission-link education-process-card';link.href=url;link.dataset.defenseExternal='true';
+        const text=document.createElement('span');text.className='education-process-title';text.textContent=label;
         const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(text,arrow);
         if(/\.pdf$/i.test(url)){link.dataset.admissionPdf='true';link.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();showAdmissionPdf(link);};}
         else{link.target='_blank';link.rel='noopener noreferrer';}
