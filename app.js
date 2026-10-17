@@ -416,16 +416,16 @@
         const controls=document.createElement('div');controls.className='accreditation-search';const label=document.createElement('label');label.htmlFor='accredited-onp-query';label.textContent='Пошук акредитованої ОНП';const input=document.createElement('input');input.id='accredited-onp-query';input.type='search';input.placeholder='Назва ОНП або код спеціальності';const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Скинути';controls.append(label,input,reset);accreditedContent.append(controls);
         const definitions=[
           ['2024','Перелік спеціальностей 2024','Постанова КМУ від 30.08.2024 № 1021','https://zakon.rada.gov.ua/laws/show/1021-2024-%D0%BF#Text'],
-          ['2022','Перелік 2015 зі змінами 2022 року','Постанова КМУ від 16.12.2022 № 1392','https://zakon.rada.gov.ua/laws/show/1392-2022-%D0%BF#Text'],
+          ['2022','Перелік спеціальностей 2015*','Постанова КМУ від 16.12.2022 № 1392','https://zakon.rada.gov.ua/laws/show/1392-2022-%D0%BF#Text'],
           ['2015','Перелік спеціальностей 2015','Постанова КМУ від 29.04.2015 № 266, зі змінами до 2022 року','https://zakon.rada.gov.ua/laws/show/266-2015-%D0%BF/ed20211231#Text']
         ];
         const note=document.createElement('p');note.className='certificate-edition-note';note.textContent='Сертифікати згруповано за кодом і назвою спеціальності, зазначеними в документі.';accreditedContent.append(note);
         const entries=[],folds=[];
         const codeOrder=(a,b)=>{const ac=a.specialty.split(' ')[0],bc=b.specialty.split(' ')[0];const am=ac.match(/^([A-Z]*)(\d+)$/),bm=bc.match(/^([A-Z]*)(\d+)$/);return am[1].localeCompare(bm[1],'en')||Number(am[2])-Number(bm[2])||a.title.localeCompare(b.title,'uk');};
         for(const [edition,heading,source,url] of definitions){
-          const fold=document.createElement('details');fold.className='certificate-edition';fold.dataset.edition=edition;const summary=document.createElement('summary');summary.textContent=heading;fold.append(summary);
-          const body=document.createElement('div');body.className='certificate-edition-body';const law=document.createElement('a');law.className='certificate-law';law.href=url;law.target='_blank';law.rel='noopener noreferrer';law.textContent=source+' ↗';body.append(law);
-          const list=document.createElement('div');list.className='accredited-onp-list';body.append(list);fold.append(body);accreditedContent.append(fold);const groupRows=[];
+          const fold=document.createElement('details');fold.className='certificate-edition';fold.dataset.edition=edition;const summary=document.createElement('summary');summary.textContent=heading;if(edition==='2022'){const note=document.createElement('small');note.className='certificate-edition-subtitle';note.textContent='*зі змінами 2022 року';summary.append(note);}fold.append(summary);
+          const body=document.createElement('div');body.className='certificate-edition-body';const law=document.createElement('a');law.className='certificate-law';law.href=url;law.target='_blank';law.rel='noopener noreferrer';law.textContent=source+' ↗';
+          const list=document.createElement('div');list.className='accredited-onp-list';body.append(list,law);fold.append(body);accreditedContent.append(fold);const groupRows=[];
           const grouped=new Map();for(const p of certificateEditions.filter(p=>p.edition===edition).sort(codeOrder)){const key=p.specialty+'|'+p.title;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(p);}
           for(const programs of grouped.values()){
             const program=programs[0],card=document.createElement('section');card.className='certificate-program';card.dataset.code=program.specialty.split(' ')[0];const code=document.createElement('p');code.className='accredited-certificate-specialty';code.textContent=program.specialty;const title=document.createElement('h3');title.className='accredited-certificate-title';title.textContent=program.title;card.append(code,title);
