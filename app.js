@@ -76,6 +76,19 @@
     if(parts.length>=3&&/(?:ович|йович|евич|євич|Ілліч|Лукич|Савич|Кузьмич)(?:а|у|ем|і)?$|(?:івн|ївн|овн|евн|євн)(?:а|и|і|у|ою)$/iu.test(parts[parts.length-1]))parts.pop();
     return parts.join(' ');
   }
+
+  function appendOneTimeDetails(body,url){
+    const info=snapshot?.councils?.oneTimeDetails?.[url];if(!info)return;
+    function fold(title){const d=document.createElement('details');d.className='doctoral-fold one-time-detail-fold';const summary=document.createElement('summary');summary.textContent=title;d.append(summary);body.append(d);return d;}
+    function person(parent,p){const card=document.createElement('section');card.className='doctoral-person';const role=document.createElement('p');role.className='doctoral-person-role';role.textContent=p.role;const name=document.createElement('p');name.className='doctoral-person-name';name.textContent=p.name;card.append(role,name);parent.append(card);}
+    if(info.persons?.length){const list=fold('Склад ради');const grid=document.createElement('div');grid.className='doctoral-members';for(const p of info.persons)person(grid,p);list.append(grid);}
+    if(info.date||info.location||info.advisors?.length||info.documents?.length){const details=fold('Відомості про захист');
+      for(const [label,value] of [['Дата захисту',info.date],['Місце проведення',info.location]]){if(!value)continue;const line=document.createElement('p'),strong=document.createElement('strong');strong.textContent=label+': ';line.append(strong,value);details.append(line);}
+      for(const p of info.advisors||[])person(details,p);
+      if(info.documents?.length){const list=document.createElement('div');list.className='one-time-documents';for(const doc of info.documents){const a=document.createElement('a');a.className='secondary';a.href=doc.url;a.target='_blank';a.rel='noopener noreferrer';a.dataset.defenseExternal='true';a.textContent=doc.title+' ↗';list.append(a);}details.append(list);}
+    }
+  }
+
   function renderCouncils(page){
     if(new URL(page.url).pathname!=='/razovi-spetsializovani-vcheni-rady')return false;
     const source=document.createElement('div');source.append(...readableFragment(page.html,page.url));
@@ -119,6 +132,7 @@
           field(body,'Тема',topic[1].replace(/,\s*$/,''));field(body,'Спеціальність',specialty[1]);field(body,'Галузь знань',area[1]);
           const legal=document.createElement('details');legal.className='council-basis';const title=document.createElement('summary');title.textContent='Підстава створення ради';legal.append(title);const p=document.createElement('p');p.textContent=basis[0].trim().replace(/^\(([\s\S]*)\)$/,'$1').replace(/^рішення/,'Рішення');legal.append(p);body.append(legal);
         }else{const p=document.createElement('p');p.className='council-original';p.textContent=entry.raw;body.append(p);}
+        if(entry.url)appendOneTimeDetails(body,entry.url);
         if(entry.url){const a=document.createElement('a');a.className='text-link';a.href=entry.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Інформація про захист ↗';body.append(a);}
         card.append(body);list.append(card);
       }
@@ -268,8 +282,8 @@
       for(const specialty of specialties){const line=document.createElement('span');line.textContent=specialty.replace(/^\d{2}\.\d{2}\.\d{2}\s*/,'');preview.append(line);}summary.append(preview);card.append(summary);
       const body=document.createElement('div');body.className='council-body';
       const specialtyTitle=document.createElement('h3');specialtyTitle.className='doctoral-detail-title';specialtyTitle.textContent=specialties.length===1?'Спеціальність':'Спеціальності';body.append(specialtyTitle);
-      const ul=document.createElement('ul');ul.className='doctoral-specialty-list';for(const specialty of specialties){const li=document.createElement('li');const specialtyCode=specialty.match(/^\d{2}\.\d{2}\.\d{2}/)?.[0];const passport=doctoralPassports[code]?.[specialtyCode];if(passport){li.className='has-passport';const link=document.createElement('a');link.className='doctoral-passport';link.href=passport;link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label',specialty+' - відкрити паспорт спеціальності PDF у новій вкладці');const label=document.createElement('span');label.textContent=specialty;const arrow=document.createElement('span');arrow.className='doctoral-passport-arrow';arrow.setAttribute('aria-hidden','true');arrow.textContent='↗';link.append(label,arrow);li.append(link);}else li.textContent=specialty;ul.append(li);}body.append(ul);
-      const composition=doctoralMembership[code];
+      const ul=document.createElement('ul');ul.className='doctoral-specialty-list';for(const specialty of specialties){const li=document.createElement('li');const specialtyCode=specialty.match(/^\d{2}\.\d{2}\.\d{2}/)?.[0];const passport=snapshot?.councils?.passports?.[code]?.[specialtyCode]||doctoralPassports[code]?.[specialtyCode];if(passport){li.className='has-passport';const link=document.createElement('a');link.className='doctoral-passport';link.href=passport;link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label',specialty+' - відкрити паспорт спеціальності PDF у новій вкладці');const label=document.createElement('span');label.textContent=specialty;const arrow=document.createElement('span');arrow.className='doctoral-passport-arrow';arrow.setAttribute('aria-hidden','true');arrow.textContent='↗';link.append(label,arrow);li.append(link);}else li.textContent=specialty;ul.append(li);}body.append(ul);
+      const composition=snapshot?.councils?.membership?.[code]||doctoralMembership[code];
       const leaders=composition?.persons?.filter(p=>p.role!=='Член ради').map(p=>({label:p.role,value:p.name}))||fields.filter(item=>/^(?:Голова ради|Заступник|Вчений секретар)/i.test(item.label));
       function section(title){const fold=document.createElement('details');fold.className='doctoral-fold';const summary=document.createElement('summary');summary.textContent=title;fold.append(summary);body.append(fold);return fold;}
       function personBlock(name,role){const block=document.createElement('section');block.className='doctoral-person';if(role&&role!=='Член ради'){const label=document.createElement('p');label.className='doctoral-person-role';label.textContent=role;block.append(label);}const fullName=document.createElement('p');fullName.className='doctoral-person-name';fullName.textContent=name;block.append(fullName);return block;}
@@ -290,7 +304,7 @@
       const archive=document.createElement('details');archive.className='doctoral-archive';
       const archiveTitle=document.createElement('summary');archiveTitle.textContent='Захисти дисертацій у раді';archive.append(archiveTitle);
       const archiveContent=document.createElement('div');archiveContent.className='doctoral-archive-content';archive.append(archiveContent);
-      const years=Object.entries(doctoralDefenses[code]||{}).sort((a,b)=>parseInt(b[0])-parseInt(a[0]));
+      const years=Object.entries(snapshot?.councils?.doctoralDefenses?.[code]??doctoralDefenses[code]??{}).sort((a,b)=>parseInt(b[0])-parseInt(a[0]));
       if(!years.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='На сайті ще немає оприлюднених записів про захисти.';archiveContent.append(empty);}
       for(const [year,defenses] of years){
         const yearFold=document.createElement('details');yearFold.className='doctoral-archive-year';const yearTitle=document.createElement('summary');yearTitle.textContent=year;yearFold.append(yearTitle);
@@ -571,6 +585,7 @@
       const note=next.pending?'Готується перше автоматичне завантаження.':next.errors?.length?' Не всі сторінки вдалося оновити.':next.stats?.remaining?' Перевірка вкладених сторінок продовжиться під час наступного оновлення.':'';
       $('sync-status').textContent=next.checkedAt?'Перевірено: '+formatSyncDate(next.checkedAt)+' (київський час).'+note:note;
       if(next.education){const ed=next.education;const stamp=ed.checkedAt||ed.attemptedAt;$('sync-status').textContent=(ed.checkedAt?'Перевірено освітній процес: ':'Спроба перевірки освітнього процесу: ')+formatSyncDate(stamp)+' (київський час).'+(ed.errors?.length?' Частину даних не оновлено; показуємо останні збережені списки.':'');}
+      if(next.councils){const c=next.councils;const stamp=c.checkedAt||c.attemptedAt;$('sync-status').textContent='Перевірено освітній процес і ради: '+formatSyncDate(stamp)+' (київський час).'+((c.errors?.length||next.education?.errors?.length)?' Деякі джерела потребують перевірки; попередні відомості збережено.':'');}
       updateContacts();
     }catch{$('sync-status').textContent=snapshot?'Не вдалося перевірити оновлення. Використовуємо збережені дані.':'Дані поки недоступні. Перевірте підключення або дочекайтеся першого автоматичного оновлення.';}
     finally{clearTimeout(timeout);loadingSnapshot=false;$('refresh-data').disabled=false;if(location.hash.startsWith('#page/')){const top=window.scrollY;setView(location.hash.slice(1),false);window.scrollTo({top,behavior:'instant'});}}

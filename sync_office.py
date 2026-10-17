@@ -240,3 +240,5 @@ if __name__=='__main__':
     else:
         from sync_education import refresh
         refresh(args.directory)
+        from sync_councils import refresh as refresh_councils
+        refresh_councils(args.directory)
