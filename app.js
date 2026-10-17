@@ -717,6 +717,18 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
   document.addEventListener('click',event=>{const summary=event.target.closest('.council-card > summary');if(!summary)return;event.preventDefault();openCouncilDialog(summary);});
 
   const names=['home','study','documents','services','contacts','page','section'];
+
+  function syncBottomBack(){
+    for(const id of ['view-page','view-section']){
+      const view=$(id);
+      let bottom=view.querySelector(':scope > .bottom-back');
+      if(!bottom){bottom=document.createElement('button');bottom.type='button';bottom.className='secondary bottom-back';view.append(bottom);}
+      const top=id==='view-page'?($('reader-back').hidden?view.querySelector('.electives-native > button'): $('reader-back')):view.querySelector(':scope > button:not(.bottom-back)');
+      bottom.hidden=!top||top.hidden;
+      if(top){bottom.textContent=top.textContent;bottom.onclick=()=>top.click();}
+    }
+  }
+
   function setView(name,moveFocus=true){
     if(name==='electives'){renderElectives();name='page';}
     if(name.startsWith('section/')){
@@ -734,6 +746,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     $('sync-status').parentElement.hidden=name!=='home';
     document.querySelectorAll('.view').forEach(node=>node.hidden=node.id!=='view-'+name);
     document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===((name==='page'?readerOrigin:name)==='section'?'study':(name==='page'?readerOrigin:name));button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
+    syncBottomBack();
     if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});if(restoreReaderScroll!==null){window.scrollTo({top:restoreReaderScroll,behavior:'instant'});restoreReaderScroll=null;}}
   }
   document.addEventListener('click',event=>{const button=event.target.closest('button[data-view]');if(!button)return;const name=button.dataset.view;if(location.hash==='#'+name)setView(name);else location.hash=name;});
