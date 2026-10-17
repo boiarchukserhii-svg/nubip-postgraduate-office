@@ -852,7 +852,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     if(!names.includes(name))name='home';
     $('sync-status').parentElement.hidden=name!=='home';
     document.querySelectorAll('.view').forEach(node=>node.hidden=node.id!=='view-'+name);
-    document.querySelectorAll('.bottom-nav button').forEach(button=>{const active=button.dataset.view===((name==='page'?readerOrigin:name)==='section'?'study':(name==='page'?readerOrigin:name));button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
+    document.querySelectorAll('.bottom-nav button').forEach(button=>{const origin=name==='page'?readerOrigin:name;const active=button.dataset.view===(origin==='section'?'study':origin==='documents'?'home':origin);button.classList.toggle('current',active);button.setAttribute('aria-current',active?'page':'false');});
     syncBottomBack();
     if(moveFocus){$('title-'+name).focus({preventScroll:true});if(name==='home')window.scrollTo({top:0,behavior:'instant'});else $('title-'+name).scrollIntoView({block:'start',behavior:'instant'});if(restoreReaderScroll!==null){window.scrollTo({top:restoreReaderScroll,behavior:'instant'});restoreReaderScroll=null;}}
   }
