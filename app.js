@@ -671,7 +671,7 @@ const electiveCatalog={"formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScIH
     const normalize=s=>s.toLocaleLowerCase('uk').replace(/[’ʼ`]/g,"'").replace(/\s+/g,' ').trim();
     function draw(){
       list.replaceChildren();const query=normalize(budgetQuery),filtered=budgetRows.filter(([name])=>normalize(name).includes(query));
-      status.textContent=filtered.length?'Програм: '+filtered.length:'За цим запитом програм не знайдено';
+      status.hidden=filtered.length>0;status.textContent=filtered.length?'':'За цим запитом програм не знайдено';
       for(const [name,count] of filtered){const row=document.createElement('li');row.className='budget-row';
         const title=document.createElement('span');title.textContent=name;
         const value=document.createElement('span');value.className='budget-places';value.textContent=count;value.setAttribute('aria-label','Бюджетних місць: '+count);row.append(title,value);list.append(row);}
