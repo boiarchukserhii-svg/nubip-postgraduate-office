@@ -3102,7 +3102,7 @@
           {
             "name": "Лихач Анна Василівна",
             "role": "Заступник голови",
-            "specialty": "06.02.04"
+            "specialty": "06.02.02"
           },
           {
             "name": "Отченашко Володимир Віталійович",
@@ -3130,14 +3130,19 @@
             "specialty": "06.02.02"
           },
           {
+            "name": "Мельник Вікторія Вікторівна",
+            "role": "Член ради",
+            "specialty": "06.02.04"
+          },
+          {
             "name": "Недашківський Володимир Михайлович",
             "role": "Член ради",
             "specialty": "06.02.02"
           },
           {
-            "name": "Повозніков Микола Гаврилович",
+            "name": "Прокопенко Наталія Павлівна",
             "role": "Член ради",
-            "specialty": "06.02.02"
+            "specialty": "06.02.04"
           },
           {
             "name": "Прудніков Василь Григорович",
@@ -3151,11 +3156,6 @@
           },
           {
             "name": "Туринський Василь Михайлович",
-            "role": "Член ради",
-            "specialty": "06.02.04"
-          },
-          {
-            "name": "Угнівенко Анатолій Миколайович",
             "role": "Член ради",
             "specialty": "06.02.04"
           }
@@ -4522,11 +4522,11 @@
         "2026 рік": [
           [
             "Осадча Юлія Василівна",
-            null
+            "https://nubip.edu.ua/zakhyst-dysertatsiyi-osadchoyi-yuliyi-vasylivny-na-temu-udoskonalennya-umov-utrymannya-kurey"
           ],
           [
             "Крук Ольга Павлівна",
-            null
+            "https://nubip.edu.ua/zakhyst-dysertatsiyi-kruk-olhy-pavlivny-na-temu-obgruntuvannya-yakisnykh-oznak-tush-dlya"
           ]
         ],
         "2025 рік": [
